@@ -1,0 +1,1 @@
+net start "Mirth Connect Service"

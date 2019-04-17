@@ -1,0 +1,2731 @@
+<channel version="3.5.1">
+  <id>ffb8b3e1-5741-46c1-b820-d6be26d75f30</id>
+  <nextMetaDataId>16</nextMetaDataId>
+  <name>SETS_Companion_GenerateJSON</name>
+  <description></description>
+  <revision>17</revision>
+  <sourceConnector version="3.5.1">
+    <metaDataId>0</metaDataId>
+    <name>sourceConnector</name>
+    <properties class="com.mirth.connect.connectors.jdbc.DatabaseReceiverProperties" version="3.5.1">
+      <pluginProperties/>
+      <pollConnectorProperties version="3.5.1">
+        <pollingType>INTERVAL</pollingType>
+        <pollOnStart>false</pollOnStart>
+        <pollingFrequency>10000</pollingFrequency>
+        <pollingHour>0</pollingHour>
+        <pollingMinute>0</pollingMinute>
+        <cronJobs/>
+        <pollConnectorPropertiesAdvanced>
+          <weekly>true</weekly>
+          <inactiveDays>
+            <boolean>false</boolean>
+            <boolean>false</boolean>
+            <boolean>false</boolean>
+            <boolean>false</boolean>
+            <boolean>false</boolean>
+            <boolean>false</boolean>
+            <boolean>false</boolean>
+            <boolean>false</boolean>
+          </inactiveDays>
+          <dayOfMonth>1</dayOfMonth>
+          <allDay>true</allDay>
+          <startingHour>8</startingHour>
+          <startingMinute>0</startingMinute>
+          <endingHour>17</endingHour>
+          <endingMinute>0</endingMinute>
+        </pollConnectorPropertiesAdvanced>
+      </pollConnectorProperties>
+      <sourceConnectorProperties version="3.5.1">
+        <responseVariable>None</responseVariable>
+        <respondAfterProcessing>true</respondAfterProcessing>
+        <processBatch>false</processBatch>
+        <firstResponse>false</firstResponse>
+        <processingThreads>1</processingThreads>
+        <resourceIds class="linked-hash-map">
+          <entry>
+            <string>Default Resource</string>
+            <string>[Default Resource]</string>
+          </entry>
+        </resourceIds>
+        <queueBufferSize>1000</queueBufferSize>
+      </sourceConnectorProperties>
+      <driver>net.sourceforge.jtds.jdbc.Driver</driver>
+      <url>jdbc:jtds:sqlserver://KECL-HIS-014293:1433/ALphaDSSLinkage</url>
+      <username>sa</username>
+      <password>wafteWAFTE@@</password>
+      <select>/*
+
+importPackage(java.io);
+importPackage(org.apache.commons.io);
+var file = new File(&apos;C:/Program Files/Mirth Connect/conf/runtime.txt&apos;);
+var starting_visit_date = FileUtils.readFileToString(file, &quot;UTF-8&quot;);
+var dbConn;
+
+var max = LastVisitLog();
+
+
+
+*/
+var current_facility=$g(&apos;facility_code&apos;);
+
+//logger.info(current_facility);
+
+
+
+try {
+
+var Query = &quot;SELECT visit_id,c.system_id,visit_date,created_at,department_visited from registry.checkins c &quot;
+    //Query += &quot; JOIN registry.person p on c.system_id=p.system_id where c.sent_flag=0&quot;;
+      Query += &quot; JOIN registry.person p on c.system_id=p.system_id where c.sent_flag=0 and p.facility_mflcode=&quot;+ current_facility +&quot;&quot;;
+
+var result = HISSgetDbConn().executeCachedQuery(Query);	
+
+return result;
+	
+	
+	//dbConn = DatabaseConnectionFactory.createDatabaseConnection(&apos;net.sourceforge.jtds.jdbc.Driver&apos;,&apos;jdbc:jtds:sqlserver://KECL-HIS-014293:1433/ALphaDSSLinkage&apos;,&apos;sa&apos;,&apos;wafteWAFTE@@&apos;);
+
+	// You may access this result below with $(&apos;column_name&apos;)
+	
+} finally {
+	if (HISSgetDbConn()) { 
+		HISSgetDbConn().close();
+	}
+}</select>
+      <update>/*
+importPackage(java.io);
+importPackage(org.apache.commons.io);
+var file = new File(&apos;C:/Program Files/Mirth Connect/conf/runtime.txt&apos;);
+var starting_visit_date = FileUtils.readFileToString(file, &quot;UTF-8&quot;);
+
+var max = LastVisitLog();
+
+*/
+
+try {
+	
+     sql = &quot;update registry.checkins set sent_flag=&apos;1&apos; WHERE system_id=&apos;&quot;+$(&apos;system_id&apos;)+&quot;&apos;&quot;;
+     HISSgetDbConn().executeUpdate(sql);
+
+    // if(max &gt;= starting_visit_date){
+	//	var new_starting_visit_date=max;
+	//	FileUtils.writeStringToFile(file, new_starting_visit_date, &quot;UTF-8&quot;, false);
+
+    // }
+	
+
+
+} finally {
+	if (HISSgetDbConn()) { 
+		HISSgetDbConn().close();
+	}
+}
+</update>
+      <useScript>true</useScript>
+      <aggregateResults>false</aggregateResults>
+      <cacheResults>true</cacheResults>
+      <keepConnectionOpen>true</keepConnectionOpen>
+      <updateMode>3</updateMode>
+      <retryCount>3</retryCount>
+      <retryInterval>10000</retryInterval>
+      <fetchSize>1000</fetchSize>
+      <encoding>DEFAULT_ENCODING</encoding>
+    </properties>
+    <transformer version="3.5.1">
+      <elements>
+        <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+          <name>TranformVisitDate</name>
+          <sequenceNumber>0</sequenceNumber>
+          <script>//var visit_date = DateUtil.convertDate(&apos;yyyy-MM-dd&apos;, &apos;yyyyMMdd&apos;, msg[&apos;visit_date&apos;].toString());
+
+$c(&apos;visit_date&apos;,msg[&apos;visit_date&apos;].toString());</script>
+        </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        <com.mirth.connect.plugins.mapper.MapperStep>
+          <name>system_id</name>
+          <sequenceNumber>1</sequenceNumber>
+          <variable>system_id</variable>
+          <mapping>msg[&apos;system_id&apos;].toString()</mapping>
+          <defaultValue></defaultValue>
+          <replacements/>
+          <scope>CHANNEL</scope>
+        </com.mirth.connect.plugins.mapper.MapperStep>
+        <com.mirth.connect.plugins.mapper.MapperStep>
+          <name>visit_created_at</name>
+          <sequenceNumber>2</sequenceNumber>
+          <variable>visit_created_at</variable>
+          <mapping>msg[&apos;created_at&apos;].toString()</mapping>
+          <defaultValue></defaultValue>
+          <replacements/>
+          <scope>CHANNEL</scope>
+        </com.mirth.connect.plugins.mapper.MapperStep>
+        <com.mirth.connect.plugins.mapper.MapperStep>
+          <name>department_visited</name>
+          <sequenceNumber>3</sequenceNumber>
+          <variable>department_visited</variable>
+          <mapping>msg[&apos;department_visited&apos;].toString()</mapping>
+          <defaultValue></defaultValue>
+          <replacements/>
+          <scope>CHANNEL</scope>
+        </com.mirth.connect.plugins.mapper.MapperStep>
+        <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+          <name>GetClientDemographics</name>
+          <sequenceNumber>4</sequenceNumber>
+          <script>var message_type=&quot;&quot;;
+var reg_date=&quot;&quot;;
+var pfile_ref_type=&quot;&quot;;
+var pfile_ref=&quot;&quot;;
+var firstname=&quot;&quot;;
+var middlename=&quot;&quot;;
+var lastname=&quot;&quot;;
+var dob=&quot;&quot;;
+var gender=&quot;&quot;;
+var marital_status=0;
+var mother_firstname=&quot;&quot;;
+var mother_middlename=&quot;&quot;;
+var mother_lastname=&quot;&quot;;
+var village_name=&quot;&quot;;
+var father_firstname=&quot;&quot;;
+var father_middlename=&quot;&quot;;
+var father_lastname=&quot;&quot;;
+var compound_firstname=&quot;&quot;;
+var compound_middlename=&quot;&quot;;
+var compound_lastname=&quot;&quot;;
+var facility_mflcode=&quot;&quot;;
+var machine_name=&quot;&quot;;
+var residency_start_date=&quot;&quot;;
+var village_name=&quot;&quot;;
+var facility_department=&quot;&quot;;
+var person_created_by=&quot;&quot;;
+var date_person_created=&quot;&quot;;
+var year_of_birth=&quot;&quot;;
+var month_of_birth=&quot;&quot;;
+var day_of_birth=&quot;&quot;;
+
+
+
+
+
+
+try {
+
+
+/*
+		
+var  Query = &quot;SELECT p.system_id,&quot;;
+	Query += &quot;reg_date,pfile_ref_type,pfile_ref,firstname,middlename,lastname,&quot;;
+	Query += &quot;dob,gender,mstatus,mfname,mjname,mlname,&quot;;
+	Query += &quot;village_name,ffname,fjname,flname,&quot;;
+	Query += &quot;chfname,chmname,chlname,facility_mflcode &quot;;
+	Query += &quot;from registry.person where system_id= &quot;+msg[&apos;system_id&apos;].toString();
+
+	*/
+
+
+	var  Query = &quot;SELECT top 1 system_id as person_system_id,&quot;;
+	Query += &quot;reg_date,facility_department,firstname,middlename,lastname,&quot;;
+	Query += &quot;year_of_birth,month_of_birth,day_of_birth,&quot;;
+	Query += &quot;dob,gender,mstatus,mfname,mjname,mlname,&quot;;
+	Query += &quot;ffname,fjname,flname,&quot;;
+	Query += &quot;chfname,chmname,chlname,facility_mflcode,&quot;;
+	Query += &quot;machine_name,village_name,dateAtCurResidence,created_by,date_created,facility_department &quot;;
+	Query += &quot;from registry.person where system_id IS NOT NULL and is_voided=0 and system_id= &apos;&quot;+ msg[&apos;system_id&apos;].toString() +&quot;&apos;;&quot;;
+
+	
+			
+		
+var result = HISSgetDbConn().executeCachedQuery(Query);	
+
+
+
+	
+	//return result;
+
+
+	while(result.next())
+	
+	{
+     	
+     	reg_date=result.getString(&quot;reg_date&quot;);
+     	firstname = result.getString(&quot;firstname&quot;);
+     	middlename = result.getString(&quot;middlename&quot;);
+     	lastname = result.getString(&quot;lastname&quot;);
+     	gender = result.getString(&quot;gender&quot;);
+     	dob = result.getString(&quot;dob&quot;);
+     	marital_status=result.getString(&quot;mstatus&quot;);
+     	mother_firstname=result.getString(&quot;mfname&quot;);
+     	mother_middlename=result.getString(&quot;mjname&quot;);
+     	mother_lastname=result.getString(&quot;mlname&quot;);
+     	village_name=result.getString(&quot;village_name&quot;);
+     	father_firstname=result.getString(&quot;ffname&quot;);
+     	father_middlename=result.getString(&quot;fjname&quot;);
+     	father_lastname=result.getString(&quot;flname&quot;);
+     	compound_firstname=result.getString(&quot;chfname&quot;);
+     	compound_middlename=result.getString(&quot;chmname&quot;);
+     	compound_lastname=result.getString(&quot;chlname&quot;);
+     	facility_mflcode=result.getInt(&quot;facility_mflcode&quot;);
+     	person_created_by=result.getString(&quot;created_by&quot;);
+     	machine_name=result.getString(&quot;machine_name&quot;);
+     	facility_department=result.getString(&quot;facility_department&quot;);
+     	residency_start_date=result.getString(&quot;dateAtCurResidence&quot;);
+     	//message_type=result.getString(&quot;message_type&quot;);
+     	year_of_birth=result.getString(&quot;year_of_birth&quot;);
+     	month_of_birth=result.getString(&quot;month_of_birth&quot;);
+     	day_of_birth=result.getString(&quot;day_of_birth&quot;);
+     	date_person_created=result.getString(&quot;date_created&quot;);
+     	message_type=&quot;ADT^A04-Person&quot;;
+     	
+     	
+     	
+
+	}
+
+
+
+
+	} 
+
+finally {
+	if (HISSgetDbConn()) { 
+		HISSgetDbConn().close();
+	}
+}
+
+
+//pid.dob=(pid.dob != null &amp;&amp; pid.dob != &apos;&apos;) ? DateUtil.convertDate(&apos;MM/dd/yyyy&apos;, &apos;yyyy-MM-dd&apos;, pid.dob) : null;
+
+/*
+
+if(reg_date)
+
+{
+	reg_date = DateUtil.convertDate(&apos;yyyy-MM-dd&apos;, &apos;yyyyMMdd&apos;,reg_date);
+	
+}
+
+*/
+
+
+$c(&apos;reg_date&apos;,reg_date);
+$c(&apos;facility_mflcode&apos;,facility_mflcode);
+$c(&apos;marital_status&apos;,marital_status);
+$c(&apos;firstname&apos;,firstname);
+$c(&apos;middlename&apos;,middlename);
+$c(&apos;lastname&apos;,lastname);
+
+
+$c(&apos;mother_firstname&apos;,mother_firstname);
+$c(&apos;mother_middlename&apos;,mother_middlename);
+$c(&apos;mother_lastname&apos;,mother_lastname);
+$c(&apos;father_firstname&apos;,father_firstname);
+$c(&apos;father_middlename&apos;,father_middlename);
+$c(&apos;father_lastname&apos;,father_lastname);
+$c(&apos;compound_firstname&apos;,compound_firstname);
+$c(&apos;compound_middlename&apos;,compound_middlename);
+$c(&apos;compound_lastname&apos;,compound_lastname);
+$c(&apos;gender&apos;,gender);
+$c(&apos;dob&apos;,dob);
+
+$c(&apos;year_of_birth&apos;,year_of_birth);
+$c(&apos;month_of_birth&apos;,month_of_birth);
+$c(&apos;day_of_birth&apos;,day_of_birth);
+
+$c(&apos;machine_name&apos;,machine_name);
+$c(&apos;residency_start_date&apos;,residency_start_date);
+$c(&apos;village_name&apos;,village_name);
+$c(&apos;facility_department&apos;,facility_department);
+$c(&apos;person_created_by&apos;,person_created_by);
+$c(&apos;date_person_created&apos;,date_person_created);
+$c(&apos;message_type&apos;,message_type);</script>
+        </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+          <name>Identifiers</name>
+          <sequenceNumber>5</sequenceNumber>
+          <script>$c(&apos;Identifiers&apos;,[]);
+
+
+try {
+	
+
+var Query = &quot;select identifier,identifier_type_id,date_created,&quot;;
+   // Query += &quot; FROM [registry].[person_identifier] pid&quot;;
+   Query += &quot;created_by,modified_at,modified_by&quot;;
+    Query += &quot; from [registry].[person_identifier] pid where system_id= &apos;&quot;+ msg[&apos;system_id&apos;].toString() +&quot;&apos;;&quot;;
+
+var result = HISSgetDbConn().executeCachedQuery(Query);
+
+while(result.next())
+{
+                    
+           var Identifier = {};
+           Identifier.identifier_type_id=result.getString(&quot;identifier_type_id&quot;);
+           Identifier.identifier_value = result.getString(&quot;identifier&quot;);
+           Identifier.identifier_created_at = result.getString(&quot;date_created&quot;);
+           Identifier.identifier_created_by = result.getString(&quot;created_by&quot;);
+           Identifier.identifier_modified_at = result.getString(&quot;modified_at&quot;);
+           Identifier.identifier_modified_by = result.getString(&quot;modified_by&quot;);
+     	  	     	     
+          $c(&apos;Identifiers&apos;).push(Identifier);	
+     	
+     
+     	
+
+} 
+
+
+} finally {
+	if (HISSgetDbConn()) { 
+		HISSgetDbConn().close();
+	}
+}</script>
+        </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+          <name>Location</name>
+          <sequenceNumber>6</sequenceNumber>
+          <script>$c(&apos;Location&apos;,[]);
+
+
+try {
+	
+
+var Query = &quot;select system_id,config_location_id,location_value,date_created,&quot;;
+    Query += &quot;created_by,date_modified,modified_by&quot;;
+    Query += &quot; FROM [registry].[person_location] pl where system_id= &apos;&quot;+ msg[&apos;system_id&apos;].toString() +&quot;&apos;;&quot;;
+
+var result = HISSgetDbConn().executeCachedQuery(Query);
+
+while(result.next())
+{
+	      
+           var Loc = {};
+                    
+           Loc.location_type_id=result.getString(&quot;config_location_id&quot;);
+           var clob = result.getClob(&quot;location_value&quot;);
+           Loc.location_value = clob.getSubString(1,clob.length());
+           //Loc.location_value=result.getString(&quot;location_value&quot;);
+     	  	//logger.info(Loc.location_value);
+
+     	 Loc.location_created_at = result.getString(&quot;date_created&quot;);
+           Loc.location_created_by = result.getString(&quot;created_by&quot;);
+           Loc.location_modified_at = result.getString(&quot;date_modified&quot;);
+           Loc.location_modified_by = result.getString(&quot;modified_by&quot;);
+     	    
+          $c(&apos;Location&apos;).push(Loc);	
+     	
+     	
+     
+     	
+
+} 
+} finally {
+	if (HISSgetDbConn()) { 
+		HISSgetDbConn().close();
+	}
+}</script>
+        </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+          <name>TestResults</name>
+          <sequenceNumber>7</sequenceNumber>
+          <script>$c(&apos;TestResult&apos;,[]);
+
+
+try {
+	
+
+var Query = &quot;select test_type,test_result,test_point,&quot;;
+   // Query += &quot; FROM [registry].[person_identifier] pid&quot;;
+   Query += &quot;is_duplicate,date_created,test_date,is_voided&quot;;
+    Query += &quot; from [registry].[test_result] tr where system_id= &apos;&quot;+ msg[&apos;system_id&apos;].toString() +&quot;&apos;;&quot;;
+
+var result = HISSgetDbConn().executeCachedQuery(Query);
+
+while(result.next())
+{
+                    
+           var Test = {};
+           Test.test_type=result.getString(&quot;test_type&quot;);
+           Test.test_result = result.getString(&quot;test_result&quot;);
+           Test.test_point = result.getString(&quot;test_point&quot;);
+           Test.is_duplicate = result.getString(&quot;is_duplicate&quot;);
+           Test.date_created = result.getString(&quot;date_created&quot;);
+           Test.test_date = result.getString(&quot;test_date&quot;);
+           Test.is_voided = result.getString(&quot;is_voided&quot;);
+     	  	     	     
+          $c(&apos;TestResult&apos;).push(Test);	
+     	
+     
+     	
+
+} 
+
+
+} finally {
+	if (HISSgetDbConn()) { 
+		HISSgetDbConn().close();
+	}
+}</script>
+        </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+          <name>FinalTestResult</name>
+          <sequenceNumber>8</sequenceNumber>
+          <script>$c(&apos;FinalTestResult&apos;,[]);
+
+try {
+	
+
+var Query = &quot;select test_type,test_result,test_point,&quot;;
+   // Query += &quot; FROM [registry].[person_identifier] pid&quot;;
+   Query += &quot;is_voided,created_at,created_by,test_date,modified_at,modified_by&quot;;
+   Query += &quot; from [registry].[final_test_result] ftr where system_id= &apos;&quot;+ msg[&apos;system_id&apos;].toString() +&quot;&apos;;&quot;;
+
+var result = HISSgetDbConn().executeCachedQuery(Query);
+
+while(result.next())
+{
+                    
+           var FinalTest = {};
+           FinalTest.test_type=result.getString(&quot;test_type&quot;);
+           FinalTest.test_result = result.getString(&quot;test_result&quot;);
+           FinalTest.test_point = result.getString(&quot;test_point&quot;);
+           FinalTest.is_voided = result.getString(&quot;is_voided&quot;);
+           FinalTest.created_at = result.getString(&quot;created_at&quot;);
+           FinalTest.created_by = result.getString(&quot;created_by&quot;);
+           FinalTest.test_date = result.getString(&quot;test_date&quot;);
+           FinalTest.modified_at = result.getString(&quot;modified_at&quot;);
+           FinalTest.modified_by = result.getString(&quot;modified_by&quot;);
+     	  	     	     
+          $c(&apos;FinalTestResult&apos;).push(FinalTest);	
+     	
+     
+     	
+
+} 
+
+
+} finally {
+	if (HISSgetDbConn()) { 
+		HISSgetDbConn().close();
+	}
+}</script>
+        </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+          <name>Checkout</name>
+          <sequenceNumber>9</sequenceNumber>
+          <script>$c(&apos;TCA&apos;,[]);
+
+
+try {	
+
+var Query = &quot;select next_app_date,date_created,is_voided&quot;;
+    Query += &quot; from [visit].[checkout] ch where system_id= &apos;&quot;+ msg[&apos;system_id&apos;].toString() +&quot;&apos;;&quot;;
+
+var result = HISSgetDbConn().executeCachedQuery(Query);
+
+while(result.next())
+{
+                    
+           var Checkout = {};
+           Checkout.next_app_date=result.getString(&quot;next_app_date&quot;);
+           Checkout.date_created = result.getString(&quot;date_created&quot;);
+           Checkout.is_voided = result.getString(&quot;is_voided&quot;);
+                	  	     	     
+          $c(&apos;TCA&apos;).push(Checkout);	
+     	
+     
+     	
+
+} 
+
+
+} finally {
+	if (HISSgetDbConn()) { 
+		HISSgetDbConn().close();
+	}
+}</script>
+        </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+          <name>PersonMatch</name>
+          <sequenceNumber>10</sequenceNumber>
+          <script>var HDSSMatch = {};
+
+try {
+	
+
+var Query = &quot;select HDSS_ID,search_criteria,date_matched,&quot;;
+    Query += &quot;match_notes,match_state,matched_by,is_hdss,is_voided&quot;;
+    Query += &quot; from registry.person_match pm where system_id= &apos;&quot;+ msg[&apos;system_id&apos;].toString() +&quot;&apos;;&quot;;
+
+var result = HISSgetDbConn().executeCachedQuery(Query);
+
+while(result.next())
+{
+                    
+           
+           HDSSMatch.HDSS_ID=result.getString(&quot;HDSS_ID&quot;);
+           HDSSMatch.search_criteria=result.getString(&quot;search_criteria&quot;);
+           HDSSMatch.date_matched=result.getString(&quot;date_matched&quot;);
+          // var clob = result.getClob(&quot;match_notes&quot;);
+
+           // HDSSMatch.match_notes=(clob != null) ? clob.getSubString(1,clob.length()) : null;
+
+           HDSSMatch.match_state=result.getString(&quot;match_state&quot;);
+           HDSSMatch.matched_by=result.getString(&quot;matched_by&quot;);
+           HDSSMatch.is_hdss=result.getString(&quot;is_hdss&quot;);
+           HDSSMatch.is_voided=result.getString(&quot;is_voided&quot;);
+           
+                	  	     	     
+          	
+     	
+     
+     	
+
+} 
+
+$c(&apos;HDSSMatch&apos;,HDSSMatch);
+
+} 
+
+finally {
+	if (HISSgetDbConn()) { 
+		HISSgetDbConn().close();
+	}
+}</script>
+        </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+          <name>HDSSSearchLog</name>
+          <sequenceNumber>11</sequenceNumber>
+          <script>$c(&apos;HDSSSearch&apos;,[]);
+
+
+try {
+	
+
+var Query = &quot;select search_parameters,created_at,involved_user&quot;;
+    Query += &quot; from [registry].[hdss_search_log] sl where system_id= &apos;&quot;+ msg[&apos;system_id&apos;].toString() +&quot;&apos;;&quot;;
+
+var result = HISSgetDbConn().executeCachedQuery(Query);
+
+while(result.next())
+{
+                    
+           var slog = {};
+
+           var clob = result.getClob(&quot;search_parameters&quot;);
+           slog.search_parameters = clob.getSubString(1,clob.length());
+           slog.created_at=result.getString(&quot;created_at&quot;);
+           slog.involved_user=result.getString(&quot;involved_user&quot;);
+                	  	     	     
+          $c(&apos;HDSSSearch&apos;).push(slog);	
+     	
+     
+     	
+
+} 
+
+
+} finally {
+	if (HISSgetDbConn()) { 
+		HISSgetDbConn().close();
+	}
+}</script>
+        </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+          <name>PersonRemarks</name>
+          <sequenceNumber>12</sequenceNumber>
+          <script>$c(&apos;Remarks&apos;,[]);
+
+
+try {
+	
+
+var Query = &quot;select remarks,created_at&quot;;
+    Query += &quot; from [registry].[person_remarks] pr where system_id= &apos;&quot;+ msg[&apos;system_id&apos;].toString() +&quot;&apos;;&quot;;
+
+var result = HISSgetDbConn().executeCachedQuery(Query);
+
+while(result.next())
+{
+                    
+           var r = {};
+
+           var clob = result.getClob(&quot;remarks&quot;);
+           r.remarks = clob.getSubString(1,clob.length());
+           r.created_at=result.getString(&quot;created_at&quot;);
+           
+          $c(&apos;Remarks&apos;).push(r);	
+     	
+     
+     	
+
+} 
+
+
+} finally {
+	if (HISSgetDbConn()) { 
+		HISSgetDbConn().close();
+	}
+}</script>
+        </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+          <name>Interviews</name>
+          <sequenceNumber>13</sequenceNumber>
+          <script>$c(&apos;Interviews&apos;,[]);
+
+
+try {
+	
+
+var Query = &quot;select start_time,end_time,date_created,involved_user&quot;;
+    Query += &quot; from [registry].[interviews] ri where system_id= &apos;&quot;+ msg[&apos;system_id&apos;].toString() +&quot;&apos;;&quot;;
+
+var result = HISSgetDbConn().executeCachedQuery(Query);
+
+while(result.next())
+{
+                    
+           var ri = {};
+
+           ri.date_created=result.getString(&quot;date_created&quot;);
+           ri.start_time=result.getString(&quot;start_time&quot;);
+           ri.end_time=result.getString(&quot;end_time&quot;);
+           ri.involved_user=result.getString(&quot;involved_user&quot;);
+           
+           
+          $c(&apos;Interviews&apos;).push(ri);	
+     	
+     
+     	
+
+} 
+
+
+} finally {
+	if (HISSgetDbConn()) { 
+		HISSgetDbConn().close();
+	}
+}</script>
+        </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+      </elements>
+      <inboundTemplate encoding="base64">PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+DQo8
+cmVzdWx0Pg0KICAgIDx2aXNpdF9pZD52YWx1ZTwvdmlzaXRfaWQ+DQogICAgPHN5c3RlbV9pZD52
+YWx1ZTwvc3lzdGVtX2lkPg0KICAgIDx2aXNpdF9kYXRlPnZhbHVlPC92aXNpdF9kYXRlPg0KICAg
+IDxjcmVhdGVkX2F0PnZhbHVlPC9jcmVhdGVkX2F0Pg0KICAgIDxkZXBhcnRtZW50X3Zpc2l0ZWQ+
+dmFsdWU8L2RlcGFydG1lbnRfdmlzaXRlZD4NCjwvcmVzdWx0Pg0K</inboundTemplate>
+      <outboundTemplate encoding="base64"></outboundTemplate>
+      <inboundDataType>XML</inboundDataType>
+      <outboundDataType>XML</outboundDataType>
+      <inboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+        <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+          <stripNamespaces>true</stripNamespaces>
+        </serializationProperties>
+        <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+          <splitType>Element_Name</splitType>
+          <elementName></elementName>
+          <level>1</level>
+          <query></query>
+          <batchScript></batchScript>
+        </batchProperties>
+      </inboundProperties>
+      <outboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+        <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+          <stripNamespaces>true</stripNamespaces>
+        </serializationProperties>
+        <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+          <splitType>Element_Name</splitType>
+          <elementName></elementName>
+          <level>1</level>
+          <query></query>
+          <batchScript></batchScript>
+        </batchProperties>
+      </outboundProperties>
+    </transformer>
+    <filter version="3.5.1">
+      <elements/>
+    </filter>
+    <transportName>Database Reader</transportName>
+    <mode>SOURCE</mode>
+    <enabled>true</enabled>
+    <waitForPrevious>true</waitForPrevious>
+  </sourceConnector>
+  <destinationConnectors>
+    <connector version="3.5.1">
+      <metaDataId>2</metaDataId>
+      <name>ADT^A04-Person</name>
+      <properties class="com.mirth.connect.connectors.tcp.TcpDispatcherProperties" version="3.5.1">
+        <pluginProperties/>
+        <destinationConnectorProperties version="3.5.1">
+          <queueEnabled>true</queueEnabled>
+          <sendFirst>true</sendFirst>
+          <retryIntervalMillis>10000</retryIntervalMillis>
+          <regenerateTemplate>false</regenerateTemplate>
+          <retryCount>2</retryCount>
+          <rotate>false</rotate>
+          <includeFilterTransformer>false</includeFilterTransformer>
+          <threadCount>4</threadCount>
+          <threadAssignmentVariable></threadAssignmentVariable>
+          <validateResponse>true</validateResponse>
+          <resourceIds class="linked-hash-map">
+            <entry>
+              <string>Default Resource</string>
+              <string>[Default Resource]</string>
+            </entry>
+          </resourceIds>
+          <queueBufferSize>1000</queueBufferSize>
+          <reattachAttachments>true</reattachAttachments>
+        </destinationConnectorProperties>
+        <transmissionModeProperties class="com.mirth.connect.plugins.mllpmode.MLLPModeProperties">
+          <pluginPointName>MLLP</pluginPointName>
+          <startOfMessageBytes>0B</startOfMessageBytes>
+          <endOfMessageBytes>1C0D</endOfMessageBytes>
+          <useMLLPv2>false</useMLLPv2>
+          <ackBytes>06</ackBytes>
+          <nackBytes>15</nackBytes>
+          <maxRetries>2</maxRetries>
+        </transmissionModeProperties>
+        <remoteAddress>${sets_server_address}</remoteAddress>
+        <remotePort>9734</remotePort>
+        <overrideLocalBinding>false</overrideLocalBinding>
+        <localAddress>0.0.0.0</localAddress>
+        <localPort>0</localPort>
+        <sendTimeout>5000</sendTimeout>
+        <bufferSize>65536</bufferSize>
+        <keepConnectionOpen>false</keepConnectionOpen>
+        <checkRemoteHost>false</checkRemoteHost>
+        <responseTimeout>5000</responseTimeout>
+        <ignoreResponse>true</ignoreResponse>
+        <queueOnResponseTimeout>true</queueOnResponseTimeout>
+        <dataTypeBinary>false</dataTypeBinary>
+        <charsetEncoding>DEFAULT_ENCODING</charsetEncoding>
+        <template>${message.encodedData}</template>
+      </properties>
+      <transformer version="3.5.1">
+        <elements>
+          <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+            <name>ParsePerson</name>
+            <sequenceNumber>0</sequenceNumber>
+            <script>tmp[&apos;MESSAGE_HEADER&apos;][&apos;SENDING_APPLICATION&apos;]=$(&apos;machine_name&apos;);
+
+tmp[&apos;MESSAGE_HEADER&apos;][&apos;SENDING_FACILITY&apos;]=$(&apos;facility_mflcode&apos;);
+
+tmp[&apos;MESSAGE_HEADER&apos;][&apos;SYSTEM_ID&apos;]=$(&apos;system_id&apos;);
+
+tmp[&apos;MESSAGE_HEADER&apos;][&apos;FACILITY_DEPARTMENT&apos;]=$(&apos;facility_department&apos;);
+
+tmp[&apos;MESSAGE_HEADER&apos;][&apos;MESSAGE_TYPE&apos;]=&apos;ADT^A04-Person&apos;;
+
+tmp[&apos;MESSAGE_HEADER&apos;][&apos;MESSAGE_DATETIME&apos;]=$(&apos;reg_date&apos;);
+
+tmp[&apos;PATIENT_NAME&apos;][&apos;FIRST_NAME&apos;]=$(&apos;firstname&apos;);
+
+tmp[&apos;PATIENT_NAME&apos;][&apos;MIDDLE_NAME&apos;]=$(&apos;middlename&apos;);
+
+tmp[&apos;PATIENT_NAME&apos;][&apos;LAST_NAME&apos;]=$(&apos;lastname&apos;);
+
+tmp[&apos;MOTHER_NAME&apos;][&apos;FIRST_NAME&apos;]=$(&apos;mother_firstname&apos;);
+
+tmp[&apos;MOTHER_NAME&apos;][&apos;MIDDLE_NAME&apos;]=$(&apos;mother_middlename&apos;);
+
+tmp[&apos;MOTHER_NAME&apos;][&apos;LAST_NAME&apos;]=$(&apos;mother_lastname&apos;);
+
+tmp[&apos;FATHER_NAME&apos;][&apos;FIRST_NAME&apos;]=$(&apos;father_firstname&apos;);
+
+tmp[&apos;FATHER_NAME&apos;][&apos;MIDDLE_NAME&apos;]=$(&apos;father_middlename&apos;);
+
+tmp[&apos;FATHER_NAME&apos;][&apos;LAST_NAME&apos;]=$(&apos;father_lastname&apos;);
+
+tmp[&apos;COMPOUND_NAME&apos;][&apos;FIRST_NAME&apos;]=$(&apos;compound_firstname&apos;);
+
+tmp[&apos;COMPOUND_NAME&apos;][&apos;MIDDLE_NAME&apos;]=$(&apos;compound_middlename&apos;);
+
+tmp[&apos;COMPOUND_NAME&apos;][&apos;LAST_NAME&apos;]=$(&apos;compound_lastname&apos;);
+
+tmp[&apos;DATE_OF_BIRTH&apos;]=$(&apos;dob&apos;);
+
+tmp[&apos;BIRTHDATE_DETAILS&apos;][&apos;YEAR_OF_BIRTH&apos;]=$(&apos;year_of_birth&apos;);
+tmp[&apos;BIRTHDATE_DETAILS&apos;][&apos;MONTH_OF_BIRTH&apos;]=$(&apos;month_of_birth&apos;);
+tmp[&apos;BIRTHDATE_DETAILS&apos;][&apos;DAY_OF_BIRTH&apos;]=$(&apos;day_of_birth&apos;);
+
+tmp[&apos;GENDER&apos;]=$(&apos;gender&apos;);
+tmp[&apos;VILLAGE_NAME&apos;]=$(&apos;village_name&apos;);
+tmp[&apos;MARITAL_STATUS&apos;]=$(&apos;marital_status&apos;);
+
+tmp[&apos;ADDITIONAL_INFORMATION&apos;][&apos;RESIDENCE_START_DATE&apos;]=$(&apos;residency_start_date&apos;);
+tmp[&apos;ADDITIONAL_INFORMATION&apos;][&apos;DATE_CREATED&apos;]=$(&apos;date_person_created&apos;);
+tmp[&apos;ADDITIONAL_INFORMATION&apos;][&apos;CREATED_BY&apos;]=$(&apos;person_created_by&apos;);
+
+tmp[&apos;PATIENT_VISIT&apos;][&apos;VISIT_DATE&apos;]=$(&apos;visit_date&apos;);
+tmp[&apos;PATIENT_VISIT&apos;][&apos;VISIT_ENTRY_DATE&apos;]=$(&apos;visit_created_at&apos;);
+tmp[&apos;PATIENT_VISIT&apos;][&apos;VISITED_DEPARTMENT&apos;]=$(&apos;department_visited&apos;);</script>
+          </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        </elements>
+        <inboundTemplate encoding="base64">PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+DQo8
+cmVzdWx0Pg0KICAgIDx2aXNpdF9pZD52YWx1ZTwvdmlzaXRfaWQ+DQogICAgPHN5c3RlbV9pZD52
+YWx1ZTwvc3lzdGVtX2lkPg0KICAgIDx2aXNpdF9kYXRlPnZhbHVlPC92aXNpdF9kYXRlPg0KICAg
+IDxjcmVhdGVkX2F0PnZhbHVlPC9jcmVhdGVkX2F0Pg0KICAgIDxkZXBhcnRtZW50X3Zpc2l0ZWQ+
+dmFsdWU8L2RlcGFydG1lbnRfdmlzaXRlZD4NCjwvcmVzdWx0Pg0K</inboundTemplate>
+        <outboundTemplate encoding="base64">ewogICJNRVNTQUdFX0hFQURFUiI6IHsKICAgICJTRU5ESU5HX0FQUExJQ0FUSU9OIjogIiIsCgki
+U0VORElOR19GQUNJTElUWSI6ICIiLAoJIlNZU1RFTV9JRCI6ICIiLAoJIkZBQ0lMSVRZX0RFUEFS
+VE1FTlQiOiAiIiwKICAgICJNRVNTQUdFX0RBVEVUSU1FIjogIiIsCiAgICAiTUVTU0FHRV9UWVBF
+IjogIiIsCiAgICAiUFJPQ0VTU0lOR19JRCI6ICIiCgkKICB9LAogIAogICAKICAgICJQQVRJRU5U
+X05BTUUiOiB7CiAgICAgICJGSVJTVF9OQU1FIjogIiIsCiAgICAgICJNSURETEVfTkFNRSI6ICIi
+LAogICAgICAiTEFTVF9OQU1FIjogIiIKICAgIH0sCgkKICAgICJNT1RIRVJfTkFNRSI6IHsKICAg
+ICAgIkZJUlNUX05BTUUiOiAiIiwKICAgICAgIk1JRERMRV9OQU1FIjogIiIsCiAgICAgICJMQVNU
+X05BTUUiOiAiIgogICAgfSwKCQoJIkZBVEhFUl9OQU1FIjogewogICAgICAiRklSU1RfTkFNRSI6
+ICIiLAogICAgICAiTUlERExFX05BTUUiOiAiIiwKICAgICAgIkxBU1RfTkFNRSI6ICIiCiAgICB9
+LAoJCgkiQ09NUE9VTkRfTkFNRSI6IHsKICAgICAgIkZJUlNUX05BTUUiOiAiIiwKICAgICAgIk1J
+RERMRV9OQU1FIjogIiIsCiAgICAgICJMQVNUX05BTUUiOiAiIgogICAgfSwKCQoJCiAgICAiREFU
+RV9PRl9CSVJUSCI6ICIiLAoJCgkiQklSVEhEQVRFX0RFVEFJTFMiOiB7CiAgICAgICJZRUFSX09G
+X0JJUlRIIjogIiIsCiAgICAgICJNT05USF9PRl9CSVJUSCI6ICIiLAogICAgICAiREFZX09GX0JJ
+UlRIIjogIiIKICAgIH0sCgkKICAgICJHRU5ERVIiOiAiIiwKCQoJIlZJTExBR0VfTkFNRSI6ICIi
+LAoJCiAgICAgICAgICAgCiAgICAiTUFSSVRBTF9TVEFUVVMiOiAiIiwKICAgIAogIAogIAogICJB
+RERJVElPTkFMX0lORk9STUFUSU9OIjogewogICAgICAiUkVTSURFTkNFX1NUQVJUX0RBVEUiOiAi
+IiwKICAgICAgIkRBVEVfQ1JFQVRFRCI6ICIiLAogICAgICAiQ1JFQVRFRF9CWSI6ICIiCiAgICB9
+LAogIAogICAgCiAgIlBBVElFTlRfVklTSVQiOiB7CiAgICAiVklTSVRfREFURSI6ICIiLAoJIlZJ
+U0lUX0VOVFJZX0RBVEUiOiAiIiwKICAgICJWSVNJVEVEX0RFUEFSVE1FTlQiOiAiIgogICB9CiAg
+IAogICAKfQ==</outboundTemplate>
+        <inboundDataType>XML</inboundDataType>
+        <outboundDataType>JSON</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+            <stripNamespaces>true</stripNamespaces>
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+            <splitType>Element_Name</splitType>
+            <elementName></elementName>
+            <level>1</level>
+            <query></query>
+            <batchScript></batchScript>
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.json.JSONDataTypeProperties" version="3.5.1">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.json.JSONBatchProperties" version="3.5.1">
+            <splitType>JavaScript</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+        </outboundProperties>
+      </transformer>
+      <responseTransformer version="3.5.1">
+        <elements>
+          <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+            <name>HandleServerInaccessibilityError</name>
+            <sequenceNumber>0</sequenceNumber>
+            <script>if (responseStatus == QUEUED &amp;&amp; connectorMessage.getSendAttempts() &gt;= 2) 
+{
+	responseStatus = ERROR;
+}</script>
+          </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        </elements>
+        <inboundTemplate encoding="base64"></inboundTemplate>
+        <outboundTemplate encoding="base64"></outboundTemplate>
+        <inboundDataType>JSON</inboundDataType>
+        <outboundDataType>JSON</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.json.JSONDataTypeProperties" version="3.5.1">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.json.JSONBatchProperties" version="3.5.1">
+            <splitType>JavaScript</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.json.JSONDataTypeProperties" version="3.5.1">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.json.JSONBatchProperties" version="3.5.1">
+            <splitType>JavaScript</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+        </outboundProperties>
+      </responseTransformer>
+      <filter version="3.5.1">
+        <elements>
+          <com.mirth.connect.plugins.javascriptrule.JavaScriptRule>
+            <name>Filter Reg</name>
+            <sequenceNumber>0</sequenceNumber>
+            <script>if($(&apos;firstname&apos;) &amp;&amp; $(&apos;lastname&apos;) &amp;&amp; $(&apos;gender&apos;) &amp;&amp; $(&apos;reg_date&apos;) &amp;&amp; $(&apos;facility_mflcode&apos;))
+
+     {
+		return true;	
+     }
+
+else
+	 {
+		return false;	
+      }</script>
+          </com.mirth.connect.plugins.javascriptrule.JavaScriptRule>
+        </elements>
+      </filter>
+      <transportName>TCP Sender</transportName>
+      <mode>DESTINATION</mode>
+      <enabled>true</enabled>
+      <waitForPrevious>true</waitForPrevious>
+    </connector>
+    <connector version="3.5.1">
+      <metaDataId>7</metaDataId>
+      <name>ADT^A04-Identifiers</name>
+      <properties class="com.mirth.connect.connectors.tcp.TcpDispatcherProperties" version="3.5.1">
+        <pluginProperties/>
+        <destinationConnectorProperties version="3.5.1">
+          <queueEnabled>true</queueEnabled>
+          <sendFirst>true</sendFirst>
+          <retryIntervalMillis>10000</retryIntervalMillis>
+          <regenerateTemplate>false</regenerateTemplate>
+          <retryCount>2</retryCount>
+          <rotate>false</rotate>
+          <includeFilterTransformer>false</includeFilterTransformer>
+          <threadCount>4</threadCount>
+          <threadAssignmentVariable></threadAssignmentVariable>
+          <validateResponse>true</validateResponse>
+          <resourceIds class="linked-hash-map">
+            <entry>
+              <string>Default Resource</string>
+              <string>[Default Resource]</string>
+            </entry>
+          </resourceIds>
+          <queueBufferSize>1000</queueBufferSize>
+          <reattachAttachments>true</reattachAttachments>
+        </destinationConnectorProperties>
+        <transmissionModeProperties class="com.mirth.connect.plugins.mllpmode.MLLPModeProperties">
+          <pluginPointName>MLLP</pluginPointName>
+          <startOfMessageBytes>0B</startOfMessageBytes>
+          <endOfMessageBytes>1C0D</endOfMessageBytes>
+          <useMLLPv2>false</useMLLPv2>
+          <ackBytes>06</ackBytes>
+          <nackBytes>15</nackBytes>
+          <maxRetries>2</maxRetries>
+        </transmissionModeProperties>
+        <remoteAddress>${sets_server_address}</remoteAddress>
+        <remotePort>9734</remotePort>
+        <overrideLocalBinding>false</overrideLocalBinding>
+        <localAddress>0.0.0.0</localAddress>
+        <localPort>0</localPort>
+        <sendTimeout>5000</sendTimeout>
+        <bufferSize>65536</bufferSize>
+        <keepConnectionOpen>false</keepConnectionOpen>
+        <checkRemoteHost>false</checkRemoteHost>
+        <responseTimeout>5000</responseTimeout>
+        <ignoreResponse>true</ignoreResponse>
+        <queueOnResponseTimeout>true</queueOnResponseTimeout>
+        <dataTypeBinary>false</dataTypeBinary>
+        <charsetEncoding>DEFAULT_ENCODING</charsetEncoding>
+        <template>${message.encodedData}</template>
+      </properties>
+      <transformer version="3.5.1">
+        <elements>
+          <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+            <name>ParseIdentifiers</name>
+            <sequenceNumber>0</sequenceNumber>
+            <script>/*
+single_identifier = &apos;&apos;;
+
+single_identifier += &apos;[&apos;;
+
+function addPID(IdType,IDValue,IDDate){
+	single_identifier += &apos;{&apos;;
+	//single_identifier += &apos;\&quot;IDENTIFIER_TYPE_ID\&quot;:\&quot;&apos; + IdType + &apos;,\&quot;IDENTIFIER\&quot;:\&quot;&apos; + IDValue + &apos;\&quot;,\&quot;DATE_CREATED\&quot;:\&quot;&apos; + IDDate +&apos;\&quot;&apos;;
+	single_identifier += &apos;\\&quot;IDENTIFIER_TYPE_ID\\&quot;:\\&quot;&apos; + IdType + &apos;,\\&quot;IDENTIFIER\\&quot;:\\&quot;&apos; + IDValue + &apos;\&quot;,\\&quot;DATE_CREATED\\&quot;:\\&quot;&apos; + IDDate +&apos;\\&quot;&apos;;
+	single_identifier += &apos;},&apos;;
+
+			
+}
+
+
+if($(&apos;Identifiers&apos;)){
+	for each(pid in $(&apos;Identifiers&apos;)){
+
+		addPID(pid.identifier_type_id.toString().toUpperCase(), pid.identifier_value.toString(),pid.identifier_created_at.toString());
+		
+	}
+}
+
+single_identifier += &apos;]&apos;;
+
+tmp[&apos;IDENTIFIERS&apos;]=single_identifier;
+
+*/
+
+tmp[&apos;MESSAGE_HEADER&apos;][&apos;SYSTEM_ID&apos;]=$(&apos;system_id&apos;);
+
+tmp[&apos;MESSAGE_HEADER&apos;][&apos;MESSAGE_TYPE&apos;]=&apos;ADT^A04-Identifiers&apos;;
+
+single_identifier = &apos;&apos;;
+
+if($(&apos;Identifiers&apos;))
+
+{
+
+//single_identifier=JSON.stringify($(&apos;Identifiers&apos;)).replace(/\\&quot;/g, &apos;&quot;&apos;);
+single_identifier=JSON.stringify($(&apos;Identifiers&apos;));
+single_identifier=JSON.parse(single_identifier);
+	
+}
+
+tmp[&apos;IDENTIFIERS&apos;]=single_identifier;</script>
+          </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        </elements>
+        <inboundTemplate encoding="base64">PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+DQo8
+cmVzdWx0Pg0KICAgIDx2aXNpdF9pZD52YWx1ZTwvdmlzaXRfaWQ+DQogICAgPHN5c3RlbV9pZD52
+YWx1ZTwvc3lzdGVtX2lkPg0KICAgIDx2aXNpdF9kYXRlPnZhbHVlPC92aXNpdF9kYXRlPg0KICAg
+IDxjcmVhdGVkX2F0PnZhbHVlPC9jcmVhdGVkX2F0Pg0KICAgIDxkZXBhcnRtZW50X3Zpc2l0ZWQ+
+dmFsdWU8L2RlcGFydG1lbnRfdmlzaXRlZD4NCjwvcmVzdWx0Pg0K</inboundTemplate>
+        <outboundTemplate encoding="base64">ewogICJNRVNTQUdFX0hFQURFUiI6IHsKICAgIAogICAgICJTWVNURU1fSUQiOiAiIiwKCSJNRVNT
+QUdFX1RZUEUiOiAiIgogICAgCQogIH0sCiAgCiJJREVOVElGSUVSUyI6WwoJCXsKCQkJIklERU5U
+SUZJRVJfVFlQRV9JRCI6IiIsCgkJCSJJREVOVElGSUVSIjoiIiwKCQkJIkRBVEVfQ1JFQVRFRCI6
+IiIsCgkJCSJDUkVBVEVEX0JZIjoiIiwKCQkJIk1PRElGSUVEX0FUIjoiIiwKCQkJIk1PRElGSUVE
+X0JZIjoiIgoJCQkKCQl9CgkJCgkJXQoKICAKfQ==</outboundTemplate>
+        <inboundDataType>XML</inboundDataType>
+        <outboundDataType>JSON</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+            <stripNamespaces>true</stripNamespaces>
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+            <splitType>Element_Name</splitType>
+            <elementName></elementName>
+            <level>1</level>
+            <query></query>
+            <batchScript></batchScript>
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.json.JSONDataTypeProperties" version="3.5.1">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.json.JSONBatchProperties" version="3.5.1">
+            <splitType>JavaScript</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+        </outboundProperties>
+      </transformer>
+      <responseTransformer version="3.5.1">
+        <elements>
+          <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+            <name>HandleInaccessbilityError</name>
+            <sequenceNumber>0</sequenceNumber>
+            <script>if (responseStatus == QUEUED &amp;&amp; connectorMessage.getSendAttempts() &gt;= 2) 
+{
+	responseStatus = ERROR;
+}</script>
+          </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        </elements>
+        <inboundTemplate encoding="base64"></inboundTemplate>
+        <outboundTemplate encoding="base64"></outboundTemplate>
+        <inboundDataType>JSON</inboundDataType>
+        <outboundDataType>JSON</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.json.JSONDataTypeProperties" version="3.5.1">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.json.JSONBatchProperties" version="3.5.1">
+            <splitType>JavaScript</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.json.JSONDataTypeProperties" version="3.5.1">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.json.JSONBatchProperties" version="3.5.1">
+            <splitType>JavaScript</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+        </outboundProperties>
+      </responseTransformer>
+      <filter version="3.5.1">
+        <elements>
+          <com.mirth.connect.plugins.javascriptrule.JavaScriptRule>
+            <name>HasIdentifiers</name>
+            <sequenceNumber>0</sequenceNumber>
+            <script>/*
+
+if($(&apos;Identifiers&apos;).Length&gt;0)
+{
+  return true;	
+	}
+
+	else
+
+	{return false;}
+
+	*/
+
+	for each(pid in $(&apos;Identifiers&apos;))
+	{
+
+		if(pid.identifier_type_id != null &amp;&amp; pid.identifier_type_id !=&apos;&apos; &amp;&amp; pid.identifier_value != null &amp;&amp; pid.identifier_value !=&apos;&apos;)
+		{
+			return true;
+			}
+
+			else
+
+			{
+				return false;
+				}
+	}</script>
+          </com.mirth.connect.plugins.javascriptrule.JavaScriptRule>
+        </elements>
+      </filter>
+      <transportName>TCP Sender</transportName>
+      <mode>DESTINATION</mode>
+      <enabled>true</enabled>
+      <waitForPrevious>true</waitForPrevious>
+    </connector>
+    <connector version="3.5.1">
+      <metaDataId>8</metaDataId>
+      <name>ADT^A04-Location</name>
+      <properties class="com.mirth.connect.connectors.tcp.TcpDispatcherProperties" version="3.5.1">
+        <pluginProperties/>
+        <destinationConnectorProperties version="3.5.1">
+          <queueEnabled>true</queueEnabled>
+          <sendFirst>true</sendFirst>
+          <retryIntervalMillis>10000</retryIntervalMillis>
+          <regenerateTemplate>false</regenerateTemplate>
+          <retryCount>2</retryCount>
+          <rotate>false</rotate>
+          <includeFilterTransformer>false</includeFilterTransformer>
+          <threadCount>4</threadCount>
+          <threadAssignmentVariable></threadAssignmentVariable>
+          <validateResponse>true</validateResponse>
+          <resourceIds class="linked-hash-map">
+            <entry>
+              <string>Default Resource</string>
+              <string>[Default Resource]</string>
+            </entry>
+          </resourceIds>
+          <queueBufferSize>1000</queueBufferSize>
+          <reattachAttachments>true</reattachAttachments>
+        </destinationConnectorProperties>
+        <transmissionModeProperties class="com.mirth.connect.plugins.mllpmode.MLLPModeProperties">
+          <pluginPointName>MLLP</pluginPointName>
+          <startOfMessageBytes>0B</startOfMessageBytes>
+          <endOfMessageBytes>1C0D</endOfMessageBytes>
+          <useMLLPv2>false</useMLLPv2>
+          <ackBytes>06</ackBytes>
+          <nackBytes>15</nackBytes>
+          <maxRetries>2</maxRetries>
+        </transmissionModeProperties>
+        <remoteAddress>${sets_server_address}</remoteAddress>
+        <remotePort>9734</remotePort>
+        <overrideLocalBinding>false</overrideLocalBinding>
+        <localAddress>0.0.0.0</localAddress>
+        <localPort>0</localPort>
+        <sendTimeout>5000</sendTimeout>
+        <bufferSize>65536</bufferSize>
+        <keepConnectionOpen>false</keepConnectionOpen>
+        <checkRemoteHost>false</checkRemoteHost>
+        <responseTimeout>5000</responseTimeout>
+        <ignoreResponse>true</ignoreResponse>
+        <queueOnResponseTimeout>true</queueOnResponseTimeout>
+        <dataTypeBinary>false</dataTypeBinary>
+        <charsetEncoding>DEFAULT_ENCODING</charsetEncoding>
+        <template>${message.encodedData}</template>
+      </properties>
+      <transformer version="3.5.1">
+        <elements>
+          <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+            <name>ParseLocation</name>
+            <sequenceNumber>0</sequenceNumber>
+            <script>tmp[&apos;MESSAGE_HEADER&apos;][&apos;SYSTEM_ID&apos;]=$(&apos;system_id&apos;);
+
+tmp[&apos;MESSAGE_HEADER&apos;][&apos;MESSAGE_TYPE&apos;]=&apos;ADT^A04-Location&apos;;
+
+single_location = &apos;&apos;;
+
+if($(&apos;Location&apos;))
+
+{
+
+single_location=JSON.stringify($(&apos;Location&apos;));
+single_location=JSON.parse(single_location);
+	
+}
+
+tmp[&apos;LOCATION&apos;]=single_location;</script>
+          </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        </elements>
+        <inboundTemplate encoding="base64">PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+DQo8
+cmVzdWx0Pg0KICAgIDx2aXNpdF9pZD52YWx1ZTwvdmlzaXRfaWQ+DQogICAgPHN5c3RlbV9pZD52
+YWx1ZTwvc3lzdGVtX2lkPg0KICAgIDx2aXNpdF9kYXRlPnZhbHVlPC92aXNpdF9kYXRlPg0KICAg
+IDxjcmVhdGVkX2F0PnZhbHVlPC9jcmVhdGVkX2F0Pg0KICAgIDxkZXBhcnRtZW50X3Zpc2l0ZWQ+
+dmFsdWU8L2RlcGFydG1lbnRfdmlzaXRlZD4NCjwvcmVzdWx0Pg0K</inboundTemplate>
+        <outboundTemplate encoding="base64">ewogICJNRVNTQUdFX0hFQURFUiI6IHsKICAgIAogICAgICJTWVNURU1fSUQiOiAiIiwKCSJNRVNT
+QUdFX1RZUEUiOiAiIgogICAgCQogIH0sCiAgCiJMT0NBVElPTiI6WwoJCXsKCQkJIkNPTkZJR19M
+T0NBVElPTl9JRCI6IiIsCgkJCSJMT0NBVElPTiBWQUxVRSI6IiIsCgkJCSJEQVRFX0NSRUFURUQi
+OiIiLAoJCQkiQ1JFQVRFRF9CWSI6IiIsCgkJCSJEQVRFX01PRElGSUVEIjoiIiwKCQkJIk1PRElG
+SUVEX0JZIjoiIgoJCQkKCQl9CgkJCgkJXQoKICAKfQogIA==</outboundTemplate>
+        <inboundDataType>XML</inboundDataType>
+        <outboundDataType>JSON</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+            <stripNamespaces>true</stripNamespaces>
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+            <splitType>Element_Name</splitType>
+            <elementName></elementName>
+            <level>1</level>
+            <query></query>
+            <batchScript></batchScript>
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.json.JSONDataTypeProperties" version="3.5.1">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.json.JSONBatchProperties" version="3.5.1">
+            <splitType>JavaScript</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+        </outboundProperties>
+      </transformer>
+      <responseTransformer version="3.5.1">
+        <elements>
+          <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+            <name>HandleServerInaccessbilityError</name>
+            <sequenceNumber>0</sequenceNumber>
+            <script>if (responseStatus == QUEUED &amp;&amp; connectorMessage.getSendAttempts() &gt;= 2) 
+{
+	responseStatus = ERROR;
+}</script>
+          </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        </elements>
+        <inboundTemplate encoding="base64"></inboundTemplate>
+        <outboundTemplate encoding="base64"></outboundTemplate>
+        <inboundDataType>JSON</inboundDataType>
+        <outboundDataType>JSON</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.json.JSONDataTypeProperties" version="3.5.1">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.json.JSONBatchProperties" version="3.5.1">
+            <splitType>JavaScript</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.json.JSONDataTypeProperties" version="3.5.1">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.json.JSONBatchProperties" version="3.5.1">
+            <splitType>JavaScript</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+        </outboundProperties>
+      </responseTransformer>
+      <filter version="3.5.1">
+        <elements>
+          <com.mirth.connect.plugins.javascriptrule.JavaScriptRule>
+            <name>FilterLocation</name>
+            <sequenceNumber>0</sequenceNumber>
+            <script>for each(lid in $(&apos;Location&apos;))
+	{
+
+		if(lid.location_type_id != null &amp;&amp; lid.location_type_id !=&apos;&apos; &amp;&amp; lid.location_value != null &amp;&amp; lid.location_value !=&apos;&apos;)
+		{
+			return true;
+			}
+
+			else
+
+			{
+				return false;
+				}
+	}</script>
+          </com.mirth.connect.plugins.javascriptrule.JavaScriptRule>
+        </elements>
+      </filter>
+      <transportName>TCP Sender</transportName>
+      <mode>DESTINATION</mode>
+      <enabled>true</enabled>
+      <waitForPrevious>true</waitForPrevious>
+    </connector>
+    <connector version="3.5.1">
+      <metaDataId>9</metaDataId>
+      <name>ORU^R01-TestResult</name>
+      <properties class="com.mirth.connect.connectors.tcp.TcpDispatcherProperties" version="3.5.1">
+        <pluginProperties/>
+        <destinationConnectorProperties version="3.5.1">
+          <queueEnabled>true</queueEnabled>
+          <sendFirst>true</sendFirst>
+          <retryIntervalMillis>10000</retryIntervalMillis>
+          <regenerateTemplate>false</regenerateTemplate>
+          <retryCount>2</retryCount>
+          <rotate>false</rotate>
+          <includeFilterTransformer>false</includeFilterTransformer>
+          <threadCount>4</threadCount>
+          <threadAssignmentVariable></threadAssignmentVariable>
+          <validateResponse>true</validateResponse>
+          <resourceIds class="linked-hash-map">
+            <entry>
+              <string>Default Resource</string>
+              <string>[Default Resource]</string>
+            </entry>
+          </resourceIds>
+          <queueBufferSize>1000</queueBufferSize>
+          <reattachAttachments>true</reattachAttachments>
+        </destinationConnectorProperties>
+        <transmissionModeProperties class="com.mirth.connect.plugins.mllpmode.MLLPModeProperties">
+          <pluginPointName>MLLP</pluginPointName>
+          <startOfMessageBytes>0B</startOfMessageBytes>
+          <endOfMessageBytes>1C0D</endOfMessageBytes>
+          <useMLLPv2>false</useMLLPv2>
+          <ackBytes>06</ackBytes>
+          <nackBytes>15</nackBytes>
+          <maxRetries>2</maxRetries>
+        </transmissionModeProperties>
+        <remoteAddress>${sets_server_address}</remoteAddress>
+        <remotePort>9734</remotePort>
+        <overrideLocalBinding>false</overrideLocalBinding>
+        <localAddress>0.0.0.0</localAddress>
+        <localPort>0</localPort>
+        <sendTimeout>5000</sendTimeout>
+        <bufferSize>65536</bufferSize>
+        <keepConnectionOpen>false</keepConnectionOpen>
+        <checkRemoteHost>false</checkRemoteHost>
+        <responseTimeout>5000</responseTimeout>
+        <ignoreResponse>true</ignoreResponse>
+        <queueOnResponseTimeout>true</queueOnResponseTimeout>
+        <dataTypeBinary>false</dataTypeBinary>
+        <charsetEncoding>DEFAULT_ENCODING</charsetEncoding>
+        <template>${message.encodedData}</template>
+      </properties>
+      <transformer version="3.5.1">
+        <elements>
+          <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+            <name>ParseTestResult</name>
+            <sequenceNumber>0</sequenceNumber>
+            <script>tmp[&apos;MESSAGE_HEADER&apos;][&apos;SYSTEM_ID&apos;]=$(&apos;system_id&apos;);
+
+tmp[&apos;MESSAGE_HEADER&apos;][&apos;MESSAGE_TYPE&apos;]=&apos;ORU^R01-TestResult&apos;;
+
+single_test = &apos;&apos;;
+
+if($(&apos;TestResult&apos;))
+
+{
+
+single_test=JSON.stringify($(&apos;TestResult&apos;));
+single_test=JSON.parse(single_test);
+	
+}
+
+tmp[&apos;TESTRESULT&apos;]=single_test;</script>
+          </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        </elements>
+        <inboundTemplate encoding="base64">PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+DQo8
+cmVzdWx0Pg0KICAgIDx2aXNpdF9pZD52YWx1ZTwvdmlzaXRfaWQ+DQogICAgPHN5c3RlbV9pZD52
+YWx1ZTwvc3lzdGVtX2lkPg0KICAgIDx2aXNpdF9kYXRlPnZhbHVlPC92aXNpdF9kYXRlPg0KICAg
+IDxjcmVhdGVkX2F0PnZhbHVlPC9jcmVhdGVkX2F0Pg0KICAgIDxkZXBhcnRtZW50X3Zpc2l0ZWQ+
+dmFsdWU8L2RlcGFydG1lbnRfdmlzaXRlZD4NCjwvcmVzdWx0Pg0K</inboundTemplate>
+        <outboundTemplate encoding="base64">ewoJIk1FU1NBR0VfSEVBREVSIjogewoKCQkiU1lTVEVNX0lEIjogIiIsCgkJIk1FU1NBR0VfVFlQ
+RSI6ICIiCgoJfSwKCgkiVEVTVFJFU1VMVCI6IFt7CgkJCSJURVNUX1RZUEUiOiAiIiwKCQkJIlRF
+U1RfUkVTVUxUIjogIiIsCgkJCSJURVNUX1BPSU5UIjogIiIsCgkJCSJJU19EVVBMSUNBVEUiOiAi
+IiwKCQkJIkRBVEVfQ1JFQVRFRCI6ICIiLAoJCQkiVEVTVF9EQVRFIjogIiIKCgkJfQoKCV0KCgp9
+</outboundTemplate>
+        <inboundDataType>XML</inboundDataType>
+        <outboundDataType>JSON</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+            <stripNamespaces>true</stripNamespaces>
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+            <splitType>Element_Name</splitType>
+            <elementName></elementName>
+            <level>1</level>
+            <query></query>
+            <batchScript></batchScript>
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.json.JSONDataTypeProperties" version="3.5.1">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.json.JSONBatchProperties" version="3.5.1">
+            <splitType>JavaScript</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+        </outboundProperties>
+      </transformer>
+      <responseTransformer version="3.5.1">
+        <elements>
+          <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+            <name>HandleServerInnaccessibilityError</name>
+            <sequenceNumber>0</sequenceNumber>
+            <script>if (responseStatus == QUEUED &amp;&amp; connectorMessage.getSendAttempts() &gt;= 2) 
+{
+	responseStatus = ERROR;
+}</script>
+          </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        </elements>
+        <inboundTemplate encoding="base64"></inboundTemplate>
+        <outboundTemplate encoding="base64"></outboundTemplate>
+        <inboundDataType>JSON</inboundDataType>
+        <outboundDataType>JSON</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.json.JSONDataTypeProperties" version="3.5.1">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.json.JSONBatchProperties" version="3.5.1">
+            <splitType>JavaScript</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.json.JSONDataTypeProperties" version="3.5.1">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.json.JSONBatchProperties" version="3.5.1">
+            <splitType>JavaScript</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+        </outboundProperties>
+      </responseTransformer>
+      <filter version="3.5.1">
+        <elements>
+          <com.mirth.connect.plugins.javascriptrule.JavaScriptRule>
+            <name>TestResult</name>
+            <sequenceNumber>0</sequenceNumber>
+            <script>for each(tr in $(&apos;TestResult&apos;))
+	{
+
+		if(tr.test_result != null &amp;&amp; tr.test_result !=&apos;&apos; &amp;&amp; tr.test_date != null &amp;&amp; tr.test_date !=&apos;&apos;)
+		{
+			return true;
+			}
+
+			else
+
+			{
+				return false;
+				
+				}
+	}</script>
+          </com.mirth.connect.plugins.javascriptrule.JavaScriptRule>
+        </elements>
+      </filter>
+      <transportName>TCP Sender</transportName>
+      <mode>DESTINATION</mode>
+      <enabled>true</enabled>
+      <waitForPrevious>true</waitForPrevious>
+    </connector>
+    <connector version="3.5.1">
+      <metaDataId>10</metaDataId>
+      <name>ORU^R01-FinalTestResult</name>
+      <properties class="com.mirth.connect.connectors.tcp.TcpDispatcherProperties" version="3.5.1">
+        <pluginProperties/>
+        <destinationConnectorProperties version="3.5.1">
+          <queueEnabled>true</queueEnabled>
+          <sendFirst>true</sendFirst>
+          <retryIntervalMillis>10000</retryIntervalMillis>
+          <regenerateTemplate>false</regenerateTemplate>
+          <retryCount>2</retryCount>
+          <rotate>false</rotate>
+          <includeFilterTransformer>false</includeFilterTransformer>
+          <threadCount>4</threadCount>
+          <threadAssignmentVariable></threadAssignmentVariable>
+          <validateResponse>true</validateResponse>
+          <resourceIds class="linked-hash-map">
+            <entry>
+              <string>Default Resource</string>
+              <string>[Default Resource]</string>
+            </entry>
+          </resourceIds>
+          <queueBufferSize>1000</queueBufferSize>
+          <reattachAttachments>true</reattachAttachments>
+        </destinationConnectorProperties>
+        <transmissionModeProperties class="com.mirth.connect.plugins.mllpmode.MLLPModeProperties">
+          <pluginPointName>MLLP</pluginPointName>
+          <startOfMessageBytes>0B</startOfMessageBytes>
+          <endOfMessageBytes>1C0D</endOfMessageBytes>
+          <useMLLPv2>false</useMLLPv2>
+          <ackBytes>06</ackBytes>
+          <nackBytes>15</nackBytes>
+          <maxRetries>2</maxRetries>
+        </transmissionModeProperties>
+        <remoteAddress>${sets_server_address}</remoteAddress>
+        <remotePort>9734</remotePort>
+        <overrideLocalBinding>false</overrideLocalBinding>
+        <localAddress>0.0.0.0</localAddress>
+        <localPort>0</localPort>
+        <sendTimeout>5000</sendTimeout>
+        <bufferSize>65536</bufferSize>
+        <keepConnectionOpen>false</keepConnectionOpen>
+        <checkRemoteHost>false</checkRemoteHost>
+        <responseTimeout>5000</responseTimeout>
+        <ignoreResponse>true</ignoreResponse>
+        <queueOnResponseTimeout>true</queueOnResponseTimeout>
+        <dataTypeBinary>false</dataTypeBinary>
+        <charsetEncoding>DEFAULT_ENCODING</charsetEncoding>
+        <template>${message.encodedData}</template>
+      </properties>
+      <transformer version="3.5.1">
+        <elements>
+          <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+            <name>ParseFinalTestResult</name>
+            <sequenceNumber>0</sequenceNumber>
+            <script>tmp[&apos;MESSAGE_HEADER&apos;][&apos;SYSTEM_ID&apos;]=$(&apos;system_id&apos;);
+
+tmp[&apos;MESSAGE_HEADER&apos;][&apos;MESSAGE_TYPE&apos;]=&apos;ORU^R01-FinalTestResult&apos;;
+
+single_test = &apos;&apos;;
+
+if($(&apos;FinalTestResult&apos;))
+
+{
+
+single_test=JSON.stringify($(&apos;FinalTestResult&apos;));
+single_test=JSON.parse(single_test);
+	
+}
+
+tmp[&apos;FINALTESTRESULT&apos;]=single_test;</script>
+          </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        </elements>
+        <inboundTemplate encoding="base64">PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+DQo8
+cmVzdWx0Pg0KICAgIDx2aXNpdF9pZD52YWx1ZTwvdmlzaXRfaWQ+DQogICAgPHN5c3RlbV9pZD52
+YWx1ZTwvc3lzdGVtX2lkPg0KICAgIDx2aXNpdF9kYXRlPnZhbHVlPC92aXNpdF9kYXRlPg0KICAg
+IDxjcmVhdGVkX2F0PnZhbHVlPC9jcmVhdGVkX2F0Pg0KICAgIDxkZXBhcnRtZW50X3Zpc2l0ZWQ+
+dmFsdWU8L2RlcGFydG1lbnRfdmlzaXRlZD4NCjwvcmVzdWx0Pg0K</inboundTemplate>
+        <outboundTemplate encoding="base64">ewoJIk1FU1NBR0VfSEVBREVSIjogewoKCQkiU1lTVEVNX0lEIjogIiIsCgkJIk1FU1NBR0VfVFlQ
+RSI6ICIiCgoJfSwKCgkiRklOQUxURVNUUkVTVUxUIjogW3sKCQkJIlRFU1RfVFlQRSI6ICIiLAoJ
+CQkiVEVTVF9SRVNVTFQiOiAiIiwKCQkJIlRFU1RfUE9JTlQiOiAiIiwKCQkJIklTX0RVUExJQ0FU
+RSI6ICIiLAoJCQkiQ1JFQVRFRF9BVCI6ICIiLAoJICAgICAgICAiQ1JFQVRFRF9CWSI6ICIiLAoJ
+ICAgICAgICAiTU9ESUZJRURfQVQiOiAiIiwKCSAgICAgICAgIk1PRElGSUVEX0JZIjogIiIsCgkJ
+CSJURVNUX0RBVEUiOiAiIgoKCQl9CgoJXQoKCn0=</outboundTemplate>
+        <inboundDataType>XML</inboundDataType>
+        <outboundDataType>JSON</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+            <stripNamespaces>true</stripNamespaces>
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+            <splitType>Element_Name</splitType>
+            <elementName></elementName>
+            <level>1</level>
+            <query></query>
+            <batchScript></batchScript>
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.json.JSONDataTypeProperties" version="3.5.1">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.json.JSONBatchProperties" version="3.5.1">
+            <splitType>JavaScript</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+        </outboundProperties>
+      </transformer>
+      <responseTransformer version="3.5.1">
+        <elements>
+          <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+            <name>HandleServerInaccessibilityError</name>
+            <sequenceNumber>0</sequenceNumber>
+            <script>if (responseStatus == QUEUED &amp;&amp; connectorMessage.getSendAttempts() &gt;= 2) 
+{
+	responseStatus = ERROR;
+}</script>
+          </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        </elements>
+        <inboundTemplate encoding="base64"></inboundTemplate>
+        <outboundTemplate encoding="base64"></outboundTemplate>
+        <inboundDataType>JSON</inboundDataType>
+        <outboundDataType>JSON</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.json.JSONDataTypeProperties" version="3.5.1">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.json.JSONBatchProperties" version="3.5.1">
+            <splitType>JavaScript</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.json.JSONDataTypeProperties" version="3.5.1">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.json.JSONBatchProperties" version="3.5.1">
+            <splitType>JavaScript</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+        </outboundProperties>
+      </responseTransformer>
+      <filter version="3.5.1">
+        <elements>
+          <com.mirth.connect.plugins.javascriptrule.JavaScriptRule>
+            <name>ParseFinalTestResult</name>
+            <sequenceNumber>0</sequenceNumber>
+            <script>for each(ftr in $(&apos;FinalTestResult&apos;))
+
+{
+
+		if(ftr.test_result != null &amp;&amp; ftr.test_result !=&apos;&apos; &amp;&amp; ftr.test_date != null &amp;&amp; ftr.test_date !=&apos;&apos;)
+		{
+			return true;
+			}
+
+			else
+
+			{
+				return false;
+				
+				}
+	}</script>
+          </com.mirth.connect.plugins.javascriptrule.JavaScriptRule>
+        </elements>
+      </filter>
+      <transportName>TCP Sender</transportName>
+      <mode>DESTINATION</mode>
+      <enabled>true</enabled>
+      <waitForPrevious>true</waitForPrevious>
+    </connector>
+    <connector version="3.5.1">
+      <metaDataId>11</metaDataId>
+      <name>SIU^S12-Appointment</name>
+      <properties class="com.mirth.connect.connectors.tcp.TcpDispatcherProperties" version="3.5.1">
+        <pluginProperties/>
+        <destinationConnectorProperties version="3.5.1">
+          <queueEnabled>true</queueEnabled>
+          <sendFirst>true</sendFirst>
+          <retryIntervalMillis>10000</retryIntervalMillis>
+          <regenerateTemplate>false</regenerateTemplate>
+          <retryCount>2</retryCount>
+          <rotate>false</rotate>
+          <includeFilterTransformer>false</includeFilterTransformer>
+          <threadCount>4</threadCount>
+          <threadAssignmentVariable></threadAssignmentVariable>
+          <validateResponse>true</validateResponse>
+          <resourceIds class="linked-hash-map">
+            <entry>
+              <string>Default Resource</string>
+              <string>[Default Resource]</string>
+            </entry>
+          </resourceIds>
+          <queueBufferSize>1000</queueBufferSize>
+          <reattachAttachments>true</reattachAttachments>
+        </destinationConnectorProperties>
+        <transmissionModeProperties class="com.mirth.connect.plugins.mllpmode.MLLPModeProperties">
+          <pluginPointName>MLLP</pluginPointName>
+          <startOfMessageBytes>0B</startOfMessageBytes>
+          <endOfMessageBytes>1C0D</endOfMessageBytes>
+          <useMLLPv2>false</useMLLPv2>
+          <ackBytes>06</ackBytes>
+          <nackBytes>15</nackBytes>
+          <maxRetries>2</maxRetries>
+        </transmissionModeProperties>
+        <remoteAddress>${sets_server_address}</remoteAddress>
+        <remotePort>9734</remotePort>
+        <overrideLocalBinding>false</overrideLocalBinding>
+        <localAddress>0.0.0.0</localAddress>
+        <localPort>0</localPort>
+        <sendTimeout>5000</sendTimeout>
+        <bufferSize>65536</bufferSize>
+        <keepConnectionOpen>false</keepConnectionOpen>
+        <checkRemoteHost>false</checkRemoteHost>
+        <responseTimeout>5000</responseTimeout>
+        <ignoreResponse>true</ignoreResponse>
+        <queueOnResponseTimeout>true</queueOnResponseTimeout>
+        <dataTypeBinary>false</dataTypeBinary>
+        <charsetEncoding>DEFAULT_ENCODING</charsetEncoding>
+        <template>${message.encodedData}</template>
+      </properties>
+      <transformer version="3.5.1">
+        <elements>
+          <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+            <name>ParseCheckout</name>
+            <sequenceNumber>0</sequenceNumber>
+            <script>tmp[&apos;MESSAGE_HEADER&apos;][&apos;SYSTEM_ID&apos;]=$(&apos;system_id&apos;);
+
+tmp[&apos;MESSAGE_HEADER&apos;][&apos;MESSAGE_TYPE&apos;]=&apos;SIU^S12-Appointment&apos;;
+
+single_checkout = &apos;&apos;;
+
+if($(&apos;TCA&apos;))
+
+{
+
+single_checkout=JSON.stringify($(&apos;TCA&apos;));
+single_checkout=JSON.parse(single_checkout);
+	
+}
+
+tmp[&apos;CHECKOUT&apos;]=single_checkout;</script>
+          </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        </elements>
+        <inboundTemplate encoding="base64">PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+DQo8
+cmVzdWx0Pg0KICAgIDx2aXNpdF9pZD52YWx1ZTwvdmlzaXRfaWQ+DQogICAgPHN5c3RlbV9pZD52
+YWx1ZTwvc3lzdGVtX2lkPg0KICAgIDx2aXNpdF9kYXRlPnZhbHVlPC92aXNpdF9kYXRlPg0KICAg
+IDxjcmVhdGVkX2F0PnZhbHVlPC9jcmVhdGVkX2F0Pg0KICAgIDxkZXBhcnRtZW50X3Zpc2l0ZWQ+
+dmFsdWU8L2RlcGFydG1lbnRfdmlzaXRlZD4NCjwvcmVzdWx0Pg0K</inboundTemplate>
+        <outboundTemplate encoding="base64">ewoJIk1FU1NBR0VfSEVBREVSIjogewoKCQkiU1lTVEVNX0lEIjogIiIsCgkJIk1FU1NBR0VfVFlQ
+RSI6ICIiCgoJfSwKCgkiQ0hFQ0tPVVQiOiBbewoJCQkiTkVYVF9BUFBfREFURSI6ICIiLAoJCQki
+Q1JFQVRFRF9BVCI6ICIiLAoJCQkiSVNfVk9JREVEIjogIiIKCgkJfQoKCV0KCgp9</outboundTemplate>
+        <inboundDataType>XML</inboundDataType>
+        <outboundDataType>JSON</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+            <stripNamespaces>true</stripNamespaces>
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+            <splitType>Element_Name</splitType>
+            <elementName></elementName>
+            <level>1</level>
+            <query></query>
+            <batchScript></batchScript>
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.json.JSONDataTypeProperties" version="3.5.1">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.json.JSONBatchProperties" version="3.5.1">
+            <splitType>JavaScript</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+        </outboundProperties>
+      </transformer>
+      <responseTransformer version="3.5.1">
+        <elements>
+          <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+            <name>HandleServerInaccessibility</name>
+            <sequenceNumber>0</sequenceNumber>
+            <script>if (responseStatus == QUEUED &amp;&amp; connectorMessage.getSendAttempts() &gt;= 2) 
+{
+	responseStatus = ERROR;
+}</script>
+          </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        </elements>
+        <inboundTemplate encoding="base64"></inboundTemplate>
+        <outboundTemplate encoding="base64"></outboundTemplate>
+        <inboundDataType>JSON</inboundDataType>
+        <outboundDataType>JSON</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.json.JSONDataTypeProperties" version="3.5.1">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.json.JSONBatchProperties" version="3.5.1">
+            <splitType>JavaScript</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.json.JSONDataTypeProperties" version="3.5.1">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.json.JSONBatchProperties" version="3.5.1">
+            <splitType>JavaScript</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+        </outboundProperties>
+      </responseTransformer>
+      <filter version="3.5.1">
+        <elements>
+          <com.mirth.connect.plugins.javascriptrule.JavaScriptRule>
+            <name>ValidateAppointment</name>
+            <sequenceNumber>0</sequenceNumber>
+            <script>for each(ch in $(&apos;TCA&apos;))
+
+{
+
+		if(ch.next_app_date != null &amp;&amp; ch.next_app_date !=&apos;&apos;)
+		{
+			return true;
+			}
+
+			else
+
+			{
+				return false;
+				
+				}
+	}</script>
+          </com.mirth.connect.plugins.javascriptrule.JavaScriptRule>
+        </elements>
+      </filter>
+      <transportName>TCP Sender</transportName>
+      <mode>DESTINATION</mode>
+      <enabled>true</enabled>
+      <waitForPrevious>true</waitForPrevious>
+    </connector>
+    <connector version="3.5.1">
+      <metaDataId>12</metaDataId>
+      <name>ADT^A04-PersonMatch</name>
+      <properties class="com.mirth.connect.connectors.tcp.TcpDispatcherProperties" version="3.5.1">
+        <pluginProperties/>
+        <destinationConnectorProperties version="3.5.1">
+          <queueEnabled>true</queueEnabled>
+          <sendFirst>true</sendFirst>
+          <retryIntervalMillis>10000</retryIntervalMillis>
+          <regenerateTemplate>false</regenerateTemplate>
+          <retryCount>2</retryCount>
+          <rotate>false</rotate>
+          <includeFilterTransformer>false</includeFilterTransformer>
+          <threadCount>4</threadCount>
+          <threadAssignmentVariable></threadAssignmentVariable>
+          <validateResponse>true</validateResponse>
+          <resourceIds class="linked-hash-map">
+            <entry>
+              <string>Default Resource</string>
+              <string>[Default Resource]</string>
+            </entry>
+          </resourceIds>
+          <queueBufferSize>1000</queueBufferSize>
+          <reattachAttachments>true</reattachAttachments>
+        </destinationConnectorProperties>
+        <transmissionModeProperties class="com.mirth.connect.plugins.mllpmode.MLLPModeProperties">
+          <pluginPointName>MLLP</pluginPointName>
+          <startOfMessageBytes>0B</startOfMessageBytes>
+          <endOfMessageBytes>1C0D</endOfMessageBytes>
+          <useMLLPv2>false</useMLLPv2>
+          <ackBytes>06</ackBytes>
+          <nackBytes>15</nackBytes>
+          <maxRetries>2</maxRetries>
+        </transmissionModeProperties>
+        <remoteAddress>${sets_server_address}</remoteAddress>
+        <remotePort>9734</remotePort>
+        <overrideLocalBinding>false</overrideLocalBinding>
+        <localAddress>0.0.0.0</localAddress>
+        <localPort>0</localPort>
+        <sendTimeout>5000</sendTimeout>
+        <bufferSize>65536</bufferSize>
+        <keepConnectionOpen>false</keepConnectionOpen>
+        <checkRemoteHost>false</checkRemoteHost>
+        <responseTimeout>5000</responseTimeout>
+        <ignoreResponse>true</ignoreResponse>
+        <queueOnResponseTimeout>true</queueOnResponseTimeout>
+        <dataTypeBinary>false</dataTypeBinary>
+        <charsetEncoding>DEFAULT_ENCODING</charsetEncoding>
+        <template>${message.encodedData}</template>
+      </properties>
+      <transformer version="3.5.1">
+        <elements>
+          <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+            <name>PersonMatch</name>
+            <sequenceNumber>0</sequenceNumber>
+            <script>tmp[&apos;MESSAGE_HEADER&apos;][&apos;SYSTEM_ID&apos;]=$(&apos;system_id&apos;);
+
+tmp[&apos;MESSAGE_HEADER&apos;][&apos;MESSAGE_TYPE&apos;]=&apos;ADT^A04-PersonMatch&apos;;
+
+single_match = &apos;&apos;;
+
+if($(&apos;HDSSMatch&apos;))
+
+{
+
+single_match=JSON.stringify($(&apos;HDSSMatch&apos;));
+single_match=JSON.parse(single_match);
+	
+}
+tmp[&apos;PERSONMATCH&apos;]=single_match;</script>
+          </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        </elements>
+        <inboundTemplate encoding="base64">PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+DQo8
+cmVzdWx0Pg0KICAgIDx2aXNpdF9pZD52YWx1ZTwvdmlzaXRfaWQ+DQogICAgPHN5c3RlbV9pZD52
+YWx1ZTwvc3lzdGVtX2lkPg0KICAgIDx2aXNpdF9kYXRlPnZhbHVlPC92aXNpdF9kYXRlPg0KICAg
+IDxjcmVhdGVkX2F0PnZhbHVlPC9jcmVhdGVkX2F0Pg0KICAgIDxkZXBhcnRtZW50X3Zpc2l0ZWQ+
+dmFsdWU8L2RlcGFydG1lbnRfdmlzaXRlZD4NCjwvcmVzdWx0Pg0K</inboundTemplate>
+        <outboundTemplate encoding="base64">ewoJIk1FU1NBR0VfSEVBREVSIjogewoKCQkiU1lTVEVNX0lEIjogIiIsCgkJIk1FU1NBR0VfVFlQ
+RSI6ICIiCgoJfSwKCgkiUEVSU09OTUFUQ0giOiB7CgkJCSJIRFNTX0lEIjogIiIsCgkJCSJTRUFS
+Q0hfQ1JJVEVSSUEiOiAiIiwKCQkJIkRBVEVfTUFUQ0hFRCI6ICIiLAoJCQkiTUFUQ0hfTk9URVMi
+OiAiIiwKCQkJIk1BVENIRURfQlkiOiAiIiwKCQkJIk1BVENIX1NUQVRFIjogIiIsCgkJCSJJU19I
+RFNTIjogIiIsCgkJCSJJU19WT0lERUQiOiAiIgoKCgkJfQoKCQoKCn0=</outboundTemplate>
+        <inboundDataType>XML</inboundDataType>
+        <outboundDataType>JSON</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+            <stripNamespaces>true</stripNamespaces>
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+            <splitType>Element_Name</splitType>
+            <elementName></elementName>
+            <level>1</level>
+            <query></query>
+            <batchScript></batchScript>
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.json.JSONDataTypeProperties" version="3.5.1">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.json.JSONBatchProperties" version="3.5.1">
+            <splitType>JavaScript</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+        </outboundProperties>
+      </transformer>
+      <responseTransformer version="3.5.1">
+        <elements>
+          <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+            <name>HandleserverInaccessibility</name>
+            <sequenceNumber>0</sequenceNumber>
+            <script>if (responseStatus == QUEUED &amp;&amp; connectorMessage.getSendAttempts() &gt;= 2) 
+{
+	responseStatus = ERROR;
+}</script>
+          </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        </elements>
+        <inboundTemplate encoding="base64"></inboundTemplate>
+        <outboundTemplate encoding="base64"></outboundTemplate>
+        <inboundDataType>JSON</inboundDataType>
+        <outboundDataType>JSON</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.json.JSONDataTypeProperties" version="3.5.1">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.json.JSONBatchProperties" version="3.5.1">
+            <splitType>JavaScript</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.json.JSONDataTypeProperties" version="3.5.1">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.json.JSONBatchProperties" version="3.5.1">
+            <splitType>JavaScript</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+        </outboundProperties>
+      </responseTransformer>
+      <filter version="3.5.1">
+        <elements>
+          <com.mirth.connect.plugins.javascriptrule.JavaScriptRule>
+            <name>ValidatePersonMatch</name>
+            <sequenceNumber>0</sequenceNumber>
+            <script>var match=$(&apos;HDSSMatch&apos;);
+
+if(match.match_state != null &amp;&amp; match.match_state != &apos;&apos;)
+
+{
+	return true
+	
+	}
+
+	else
+
+	{
+		return false;
+		
+		}</script>
+          </com.mirth.connect.plugins.javascriptrule.JavaScriptRule>
+        </elements>
+      </filter>
+      <transportName>TCP Sender</transportName>
+      <mode>DESTINATION</mode>
+      <enabled>true</enabled>
+      <waitForPrevious>true</waitForPrevious>
+    </connector>
+    <connector version="3.5.1">
+      <metaDataId>13</metaDataId>
+      <name>ADT^A04-HDSS-SearchLog</name>
+      <properties class="com.mirth.connect.connectors.tcp.TcpDispatcherProperties" version="3.5.1">
+        <pluginProperties/>
+        <destinationConnectorProperties version="3.5.1">
+          <queueEnabled>true</queueEnabled>
+          <sendFirst>true</sendFirst>
+          <retryIntervalMillis>10000</retryIntervalMillis>
+          <regenerateTemplate>false</regenerateTemplate>
+          <retryCount>2</retryCount>
+          <rotate>false</rotate>
+          <includeFilterTransformer>false</includeFilterTransformer>
+          <threadCount>4</threadCount>
+          <threadAssignmentVariable></threadAssignmentVariable>
+          <validateResponse>true</validateResponse>
+          <resourceIds class="linked-hash-map">
+            <entry>
+              <string>Default Resource</string>
+              <string>[Default Resource]</string>
+            </entry>
+          </resourceIds>
+          <queueBufferSize>1000</queueBufferSize>
+          <reattachAttachments>true</reattachAttachments>
+        </destinationConnectorProperties>
+        <transmissionModeProperties class="com.mirth.connect.plugins.mllpmode.MLLPModeProperties">
+          <pluginPointName>MLLP</pluginPointName>
+          <startOfMessageBytes>0B</startOfMessageBytes>
+          <endOfMessageBytes>1C0D</endOfMessageBytes>
+          <useMLLPv2>false</useMLLPv2>
+          <ackBytes>06</ackBytes>
+          <nackBytes>15</nackBytes>
+          <maxRetries>2</maxRetries>
+        </transmissionModeProperties>
+        <remoteAddress>${sets_server_address}</remoteAddress>
+        <remotePort>9734</remotePort>
+        <overrideLocalBinding>false</overrideLocalBinding>
+        <localAddress>0.0.0.0</localAddress>
+        <localPort>0</localPort>
+        <sendTimeout>5000</sendTimeout>
+        <bufferSize>65536</bufferSize>
+        <keepConnectionOpen>false</keepConnectionOpen>
+        <checkRemoteHost>false</checkRemoteHost>
+        <responseTimeout>5000</responseTimeout>
+        <ignoreResponse>true</ignoreResponse>
+        <queueOnResponseTimeout>true</queueOnResponseTimeout>
+        <dataTypeBinary>false</dataTypeBinary>
+        <charsetEncoding>DEFAULT_ENCODING</charsetEncoding>
+        <template>${message.encodedData}</template>
+      </properties>
+      <transformer version="3.5.1">
+        <elements>
+          <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+            <name>ParseHDSSLog</name>
+            <sequenceNumber>0</sequenceNumber>
+            <script>tmp[&apos;MESSAGE_HEADER&apos;][&apos;SYSTEM_ID&apos;]=$(&apos;system_id&apos;);
+
+tmp[&apos;MESSAGE_HEADER&apos;][&apos;MESSAGE_TYPE&apos;]=&apos;ADT^A04-HDSS-SearchLog&apos;;
+
+single_log = &apos;&apos;;
+
+if($(&apos;HDSSSearch&apos;))
+
+{
+
+single_log=JSON.stringify($(&apos;HDSSSearch&apos;));
+single_log=JSON.parse(single_log);
+	
+}
+
+tmp[&apos;HDSSLOG&apos;]=single_log;</script>
+          </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        </elements>
+        <inboundTemplate encoding="base64">PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+DQo8
+cmVzdWx0Pg0KICAgIDx2aXNpdF9pZD52YWx1ZTwvdmlzaXRfaWQ+DQogICAgPHN5c3RlbV9pZD52
+YWx1ZTwvc3lzdGVtX2lkPg0KICAgIDx2aXNpdF9kYXRlPnZhbHVlPC92aXNpdF9kYXRlPg0KICAg
+IDxjcmVhdGVkX2F0PnZhbHVlPC9jcmVhdGVkX2F0Pg0KICAgIDxkZXBhcnRtZW50X3Zpc2l0ZWQ+
+dmFsdWU8L2RlcGFydG1lbnRfdmlzaXRlZD4NCjwvcmVzdWx0Pg0K</inboundTemplate>
+        <outboundTemplate encoding="base64">ewoJIk1FU1NBR0VfSEVBREVSIjogewoKCQkiU1lTVEVNX0lEIjogIiIsCgkJIk1FU1NBR0VfVFlQ
+RSI6ICIiCgoJfSwKCgkiSERTU0xPRyI6IFt7CgkJIlNFQVJDSF9QQVJBTUVURVJTIjogIiIsCgkJ
+IkNSRUFURURfQVQiOiAiIiwKCQkiSU5WT0xWRURfVVNFUiI6ICIiCgl9XQoKCgoKfQ==</outboundTemplate>
+        <inboundDataType>XML</inboundDataType>
+        <outboundDataType>JSON</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+            <stripNamespaces>true</stripNamespaces>
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+            <splitType>Element_Name</splitType>
+            <elementName></elementName>
+            <level>1</level>
+            <query></query>
+            <batchScript></batchScript>
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.json.JSONDataTypeProperties" version="3.5.1">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.json.JSONBatchProperties" version="3.5.1">
+            <splitType>JavaScript</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+        </outboundProperties>
+      </transformer>
+      <responseTransformer version="3.5.1">
+        <elements>
+          <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+            <name>HandleServerInaccessibility</name>
+            <sequenceNumber>0</sequenceNumber>
+            <script>if (responseStatus == QUEUED &amp;&amp; connectorMessage.getSendAttempts() &gt;= 2) 
+{
+	responseStatus = ERROR;
+}</script>
+          </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        </elements>
+        <inboundTemplate encoding="base64"></inboundTemplate>
+        <outboundTemplate encoding="base64"></outboundTemplate>
+        <inboundDataType>JSON</inboundDataType>
+        <outboundDataType>JSON</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.json.JSONDataTypeProperties" version="3.5.1">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.json.JSONBatchProperties" version="3.5.1">
+            <splitType>JavaScript</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.json.JSONDataTypeProperties" version="3.5.1">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.json.JSONBatchProperties" version="3.5.1">
+            <splitType>JavaScript</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+        </outboundProperties>
+      </responseTransformer>
+      <filter version="3.5.1">
+        <elements>
+          <com.mirth.connect.plugins.javascriptrule.JavaScriptRule>
+            <name>ValidateSearchLog</name>
+            <sequenceNumber>0</sequenceNumber>
+            <script>for each(sl in $(&apos;HDSSSearch&apos;))
+
+{
+
+		if(sl.search_parameters != null &amp;&amp; sl.search_parameters !=&apos;&apos;)
+		{
+			return true;
+		}
+
+			     else
+
+			     {
+			     	
+				return false;
+				
+				}
+	}</script>
+          </com.mirth.connect.plugins.javascriptrule.JavaScriptRule>
+        </elements>
+      </filter>
+      <transportName>TCP Sender</transportName>
+      <mode>DESTINATION</mode>
+      <enabled>true</enabled>
+      <waitForPrevious>true</waitForPrevious>
+    </connector>
+    <connector version="3.5.1">
+      <metaDataId>14</metaDataId>
+      <name>ADT^A04-PersonRemarks</name>
+      <properties class="com.mirth.connect.connectors.tcp.TcpDispatcherProperties" version="3.5.1">
+        <pluginProperties/>
+        <destinationConnectorProperties version="3.5.1">
+          <queueEnabled>true</queueEnabled>
+          <sendFirst>true</sendFirst>
+          <retryIntervalMillis>10000</retryIntervalMillis>
+          <regenerateTemplate>false</regenerateTemplate>
+          <retryCount>2</retryCount>
+          <rotate>false</rotate>
+          <includeFilterTransformer>false</includeFilterTransformer>
+          <threadCount>4</threadCount>
+          <threadAssignmentVariable></threadAssignmentVariable>
+          <validateResponse>true</validateResponse>
+          <resourceIds class="linked-hash-map">
+            <entry>
+              <string>Default Resource</string>
+              <string>[Default Resource]</string>
+            </entry>
+          </resourceIds>
+          <queueBufferSize>1000</queueBufferSize>
+          <reattachAttachments>true</reattachAttachments>
+        </destinationConnectorProperties>
+        <transmissionModeProperties class="com.mirth.connect.plugins.mllpmode.MLLPModeProperties">
+          <pluginPointName>MLLP</pluginPointName>
+          <startOfMessageBytes>0B</startOfMessageBytes>
+          <endOfMessageBytes>1C0D</endOfMessageBytes>
+          <useMLLPv2>false</useMLLPv2>
+          <ackBytes>06</ackBytes>
+          <nackBytes>15</nackBytes>
+          <maxRetries>2</maxRetries>
+        </transmissionModeProperties>
+        <remoteAddress>${sets_server_address}</remoteAddress>
+        <remotePort>9734</remotePort>
+        <overrideLocalBinding>false</overrideLocalBinding>
+        <localAddress>0.0.0.0</localAddress>
+        <localPort>0</localPort>
+        <sendTimeout>5000</sendTimeout>
+        <bufferSize>65536</bufferSize>
+        <keepConnectionOpen>false</keepConnectionOpen>
+        <checkRemoteHost>false</checkRemoteHost>
+        <responseTimeout>5000</responseTimeout>
+        <ignoreResponse>true</ignoreResponse>
+        <queueOnResponseTimeout>true</queueOnResponseTimeout>
+        <dataTypeBinary>false</dataTypeBinary>
+        <charsetEncoding>DEFAULT_ENCODING</charsetEncoding>
+        <template>${message.encodedData}</template>
+      </properties>
+      <transformer version="3.5.1">
+        <elements>
+          <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+            <name>ParseRemarks</name>
+            <sequenceNumber>0</sequenceNumber>
+            <script>tmp[&apos;MESSAGE_HEADER&apos;][&apos;SYSTEM_ID&apos;]=$(&apos;system_id&apos;);
+
+tmp[&apos;MESSAGE_HEADER&apos;][&apos;MESSAGE_TYPE&apos;]=&apos;ADT^A04-PersonRemarks&apos;;
+
+single_remark = &apos;&apos;;
+
+if($(&apos;Remarks&apos;))
+
+{
+
+single_remark=JSON.stringify($(&apos;Remarks&apos;));
+single_remark=JSON.parse(single_remark);
+	
+}
+
+tmp[&apos;PERSONREMARKS&apos;]=single_remark;</script>
+          </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        </elements>
+        <inboundTemplate encoding="base64">PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+DQo8
+cmVzdWx0Pg0KICAgIDx2aXNpdF9pZD52YWx1ZTwvdmlzaXRfaWQ+DQogICAgPHN5c3RlbV9pZD52
+YWx1ZTwvc3lzdGVtX2lkPg0KICAgIDx2aXNpdF9kYXRlPnZhbHVlPC92aXNpdF9kYXRlPg0KICAg
+IDxjcmVhdGVkX2F0PnZhbHVlPC9jcmVhdGVkX2F0Pg0KICAgIDxkZXBhcnRtZW50X3Zpc2l0ZWQ+
+dmFsdWU8L2RlcGFydG1lbnRfdmlzaXRlZD4NCjwvcmVzdWx0Pg0K</inboundTemplate>
+        <outboundTemplate encoding="base64">ewoJIk1FU1NBR0VfSEVBREVSIjogewoKCQkiU1lTVEVNX0lEIjogIiIsCgkJIk1FU1NBR0VfVFlQ
+RSI6ICIiCgoJfSwKCgkiUEVSU09OUkVNQVJLUyI6IFt7CgkJIlJFTUFSS1MiOiAiIiwKCQkiQ1JF
+QVRFRF9BVCI6ICIiCgl9XQoKCgoKfQ==</outboundTemplate>
+        <inboundDataType>XML</inboundDataType>
+        <outboundDataType>JSON</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+            <stripNamespaces>true</stripNamespaces>
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+            <splitType>Element_Name</splitType>
+            <elementName></elementName>
+            <level>1</level>
+            <query></query>
+            <batchScript></batchScript>
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.json.JSONDataTypeProperties" version="3.5.1">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.json.JSONBatchProperties" version="3.5.1">
+            <splitType>JavaScript</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+        </outboundProperties>
+      </transformer>
+      <responseTransformer version="3.5.1">
+        <elements>
+          <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+            <name>HandleServerInaccessibility</name>
+            <sequenceNumber>0</sequenceNumber>
+            <script>if (responseStatus == QUEUED &amp;&amp; connectorMessage.getSendAttempts() &gt;= 2) 
+{
+	responseStatus = ERROR;
+}</script>
+          </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        </elements>
+        <inboundTemplate encoding="base64"></inboundTemplate>
+        <outboundTemplate encoding="base64"></outboundTemplate>
+        <inboundDataType>JSON</inboundDataType>
+        <outboundDataType>JSON</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.json.JSONDataTypeProperties" version="3.5.1">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.json.JSONBatchProperties" version="3.5.1">
+            <splitType>JavaScript</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.json.JSONDataTypeProperties" version="3.5.1">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.json.JSONBatchProperties" version="3.5.1">
+            <splitType>JavaScript</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+        </outboundProperties>
+      </responseTransformer>
+      <filter version="3.5.1">
+        <elements>
+          <com.mirth.connect.plugins.javascriptrule.JavaScriptRule>
+            <name>ValidateRemarks</name>
+            <sequenceNumber>0</sequenceNumber>
+            <script>for each(r in $(&apos;Remarks&apos;))
+
+{
+
+		if(r.remarks != null &amp;&amp; r.remarks !=&apos;&apos;)
+		{
+			return true;
+		}
+
+			     else
+
+			     {
+			     	
+				return false;
+				
+				}
+	}</script>
+          </com.mirth.connect.plugins.javascriptrule.JavaScriptRule>
+        </elements>
+      </filter>
+      <transportName>TCP Sender</transportName>
+      <mode>DESTINATION</mode>
+      <enabled>true</enabled>
+      <waitForPrevious>true</waitForPrevious>
+    </connector>
+    <connector version="3.5.1">
+      <metaDataId>15</metaDataId>
+      <name>ADT^A04-PersonInterviews</name>
+      <properties class="com.mirth.connect.connectors.tcp.TcpDispatcherProperties" version="3.5.1">
+        <pluginProperties/>
+        <destinationConnectorProperties version="3.5.1">
+          <queueEnabled>true</queueEnabled>
+          <sendFirst>true</sendFirst>
+          <retryIntervalMillis>10000</retryIntervalMillis>
+          <regenerateTemplate>false</regenerateTemplate>
+          <retryCount>2</retryCount>
+          <rotate>false</rotate>
+          <includeFilterTransformer>false</includeFilterTransformer>
+          <threadCount>4</threadCount>
+          <threadAssignmentVariable></threadAssignmentVariable>
+          <validateResponse>true</validateResponse>
+          <resourceIds class="linked-hash-map">
+            <entry>
+              <string>Default Resource</string>
+              <string>[Default Resource]</string>
+            </entry>
+          </resourceIds>
+          <queueBufferSize>1000</queueBufferSize>
+          <reattachAttachments>true</reattachAttachments>
+        </destinationConnectorProperties>
+        <transmissionModeProperties class="com.mirth.connect.plugins.mllpmode.MLLPModeProperties">
+          <pluginPointName>MLLP</pluginPointName>
+          <startOfMessageBytes>0B</startOfMessageBytes>
+          <endOfMessageBytes>1C0D</endOfMessageBytes>
+          <useMLLPv2>false</useMLLPv2>
+          <ackBytes>06</ackBytes>
+          <nackBytes>15</nackBytes>
+          <maxRetries>2</maxRetries>
+        </transmissionModeProperties>
+        <remoteAddress>${sets_server_address}</remoteAddress>
+        <remotePort>9734</remotePort>
+        <overrideLocalBinding>false</overrideLocalBinding>
+        <localAddress>0.0.0.0</localAddress>
+        <localPort>0</localPort>
+        <sendTimeout>5000</sendTimeout>
+        <bufferSize>65536</bufferSize>
+        <keepConnectionOpen>false</keepConnectionOpen>
+        <checkRemoteHost>false</checkRemoteHost>
+        <responseTimeout>5000</responseTimeout>
+        <ignoreResponse>true</ignoreResponse>
+        <queueOnResponseTimeout>true</queueOnResponseTimeout>
+        <dataTypeBinary>false</dataTypeBinary>
+        <charsetEncoding>DEFAULT_ENCODING</charsetEncoding>
+        <template>${message.encodedData}</template>
+      </properties>
+      <transformer version="3.5.1">
+        <elements>
+          <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+            <name>ParseInterviews</name>
+            <sequenceNumber>0</sequenceNumber>
+            <script>tmp[&apos;MESSAGE_HEADER&apos;][&apos;SYSTEM_ID&apos;]=$(&apos;system_id&apos;);
+
+tmp[&apos;MESSAGE_HEADER&apos;][&apos;MESSAGE_TYPE&apos;]=&apos;ADT^A04-PersonInterviews&apos;;
+
+single_interview = &apos;&apos;;
+
+if($(&apos;Interviews&apos;))
+
+{
+
+single_interview=JSON.stringify($(&apos;Interviews&apos;));
+single_interview=JSON.parse(single_interview);
+	
+}
+
+tmp[&apos;INTERVIEWS&apos;]=single_interview;</script>
+          </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        </elements>
+        <inboundTemplate encoding="base64">PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+DQo8
+cmVzdWx0Pg0KICAgIDx2aXNpdF9pZD52YWx1ZTwvdmlzaXRfaWQ+DQogICAgPHN5c3RlbV9pZD52
+YWx1ZTwvc3lzdGVtX2lkPg0KICAgIDx2aXNpdF9kYXRlPnZhbHVlPC92aXNpdF9kYXRlPg0KICAg
+IDxjcmVhdGVkX2F0PnZhbHVlPC9jcmVhdGVkX2F0Pg0KICAgIDxkZXBhcnRtZW50X3Zpc2l0ZWQ+
+dmFsdWU8L2RlcGFydG1lbnRfdmlzaXRlZD4NCjwvcmVzdWx0Pg0K</inboundTemplate>
+        <outboundTemplate encoding="base64">ewoJIk1FU1NBR0VfSEVBREVSIjogewoKCQkiU1lTVEVNX0lEIjogIiIsCgkJIk1FU1NBR0VfVFlQ
+RSI6ICIiCgoJfSwKCgkiSU5URVJWSUVXUyI6IFt7CgkJIlNUQVJUX1RJTUUiOiAiIiwKCQkiRU5E
+X1RJTUUiOiAiIiwKCQkiQ1JFQVRFRF9BVCI6ICIiLAoJCSJJTlZPTFZFRF9VU0VSIjogIiIKCX1d
+CgoKCgp9</outboundTemplate>
+        <inboundDataType>XML</inboundDataType>
+        <outboundDataType>JSON</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+            <stripNamespaces>true</stripNamespaces>
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+            <splitType>Element_Name</splitType>
+            <elementName></elementName>
+            <level>1</level>
+            <query></query>
+            <batchScript></batchScript>
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.json.JSONDataTypeProperties" version="3.5.1">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.json.JSONBatchProperties" version="3.5.1">
+            <splitType>JavaScript</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+        </outboundProperties>
+      </transformer>
+      <responseTransformer version="3.5.1">
+        <elements>
+          <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+            <name>HandleServerInaccessibility</name>
+            <sequenceNumber>0</sequenceNumber>
+            <script>if (responseStatus == QUEUED &amp;&amp; connectorMessage.getSendAttempts() &gt;= 2) 
+{
+	responseStatus = ERROR;
+}</script>
+          </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        </elements>
+        <inboundTemplate encoding="base64"></inboundTemplate>
+        <outboundTemplate encoding="base64"></outboundTemplate>
+        <inboundDataType>JSON</inboundDataType>
+        <outboundDataType>JSON</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.json.JSONDataTypeProperties" version="3.5.1">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.json.JSONBatchProperties" version="3.5.1">
+            <splitType>JavaScript</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.json.JSONDataTypeProperties" version="3.5.1">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.json.JSONBatchProperties" version="3.5.1">
+            <splitType>JavaScript</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+        </outboundProperties>
+      </responseTransformer>
+      <filter version="3.5.1">
+        <elements>
+          <com.mirth.connect.plugins.javascriptrule.JavaScriptRule>
+            <name>ValidateInterview</name>
+            <sequenceNumber>0</sequenceNumber>
+            <script>for each(sl in $(&apos;Interviews&apos;))
+
+{
+
+		if(sl.start_time != null &amp;&amp; sl.start_time !=&apos;&apos; &amp;&amp; sl.end_time != null &amp;&amp; sl.end_time)
+		{
+			return true;
+		}
+
+			     else
+
+			     {
+			     	
+				return false;
+				
+				}
+	}</script>
+          </com.mirth.connect.plugins.javascriptrule.JavaScriptRule>
+        </elements>
+      </filter>
+      <transportName>TCP Sender</transportName>
+      <mode>DESTINATION</mode>
+      <enabled>true</enabled>
+      <waitForPrevious>true</waitForPrevious>
+    </connector>
+  </destinationConnectors>
+  <preprocessingScript>// Modify the message variable below to pre process data
+// This script executes once after a message has been processed
+// Responses returned from here will be stored as &quot;Postprocessor&quot; in the response map
+//return;
+importPackage(java.io);
+importPackage(java.util);
+importPackage(org.apache.commons.io);
+
+//get the details of the machine doing the transmission
+
+var	hostName;
+try{
+ hostName = Packages.java.net.InetAddress.getLocalHost().getHostName();
+}
+
+catch(e)
+{
+	logger.error(e);
+}
+
+var stats_string=&quot;&quot;;
+stats_string += &quot;Status of the SETS Data Transmission Channel&quot;;
+stats_string += &quot;\r\n&quot;;
+stats_string += &quot;\r\n&quot;;
+stats_string += &quot;The transmitting facility mflcode: &quot;+$g(&apos;facility_code&apos;);
+stats_string += &quot;\r\n&quot;;
+stats_string += &quot;\r\n&quot;;
+stats_string += &quot;The transmitting computer name: &quot;+hostName;
+stats_string += &quot;\r\n&quot;;
+stats_string += &quot;\r\n&quot;;
+var received=ChannelUtil.getReceivedCount(channelId);	
+stats_string += &quot;Message count retrieved from this computer-&quot;+received;
+stats_string += &quot;\r\n&quot;;
+stats_string += &quot;\r\n&quot;;		
+var sent=ChannelUtil.getSentCount(channelId);
+stats_string += &quot;Message count sent to the central server-&quot;+sent;
+stats_string += &quot;\r\n&quot;;
+stats_string += &quot;\r\n&quot;;
+var errorred=ChannelUtil.getErrorCount(channelId);
+stats_string += &quot;Messages with errors-&quot;+errorred;
+stats_string += &quot;\r\n&quot;;
+stats_string += &quot;\r\n&quot;;
+var queued=ChannelUtil.getQueuedCount(channelId);
+stats_string += &quot;Queued message count-&quot;+queued;
+stats_string += &quot;\r\n&quot;;
+stats_string += &quot;\r\n&quot;;
+
+var filtered=ChannelUtil.getFilteredCount(channelId);
+
+var transmission_date=DateUtil.getCurrentDate(&apos;dd-MM-YYYY&apos;);
+transmission_time=DateUtil.getCurrentDate(&apos;HH:mm:ss&apos;);
+
+
+stats_string += &quot;Transmission status on: &quot; + transmission_date + &quot; at &quot; +transmission_time;
+stats_string += &quot;\r\n&quot;;
+
+var file = new File(&apos;C:/Program Files/Mirth Connect/conf/sets/statistics.txt&apos;);
+
+//if (!file.exists())
+
+//{
+	try{
+		FileUtils.writeStringToFile(file,stats_string , &quot;UTF-8&quot;, false);
+		
+		
+	} catch(err){
+		logger.error(&apos;The statistics file was not created. &apos;+ err);
+	}
+//} 
+
+//logger.info(stats_string);
+
+/*
+
+logger.info(ChannelUtil.getDeployedChannelName(channelId));
+logger.info(ChannelUtil.getReceivedCount(channelId));
+logger.info(ChannelUtil.getSentCount(channelId));
+logger.info(ChannelUtil.getErrorCount(channelId));
+logger.info(ChannelUtil.getQueuedCount(channelId));
+logger.info(ChannelUtil.getFilteredCount(channelId));
+
+*/
+
+
+return message;</preprocessingScript>
+  <postprocessingScript>return;</postprocessingScript>
+  <deployScript>importPackage(java.io);
+importPackage(java.util);
+importPackage(org.apache.commons.io);
+
+
+var file = new File(&apos;C:/Program Files/Mirth Connect/conf/sets/statistics.txt&apos;);
+if (!file.exists()){
+	try{
+		FileUtils.writeStringToFile(file, &quot;&quot;, &quot;UTF-8&quot;, false);
+		
+		logger.info(&apos;The runtime file has been created&apos;);
+	} catch(err){
+		logger.error(&apos;The runtime file was not created. &apos;+ err);
+	}
+} 
+
+
+// This script executes once when the channel is deployed
+// You only have access to the globalMap and globalChannelMap here to persist data
+//return;
+
+
+//load the property values as indicated in the linkage.properties file
+
+//load the properties
+/*
+var properties = new Properties();
+properties.load(new FileInputStream(new File(&quot;C:/Program Files/Mirth Connect/conf/linkage.properties&quot;)));
+globalMap.globalVariableMap.putAll(properties);
+
+*/
+
+/*
+
+importPackage(java.io);
+importPackage(java.util);
+importPackage(org.apache.commons.io);
+
+
+var file = new File(&apos;C:/Program Files/Mirth Connect/conf/runtime.txt&apos;);
+if (!file.exists()){
+	try{
+		FileUtils.writeStringToFile(file, &quot;2018-05-01&quot;, &quot;UTF-8&quot;, false);
+		
+		logger.info(&apos;The runtime file has been created&apos;);
+	} catch(err){
+		logger.error(&apos;The runtime file was not created. &apos;+ err);
+	}
+} 
+
+
+// This script executes once when the channel is deployed
+// You only have access to the globalMap and globalChannelMap here to persist data
+return;
+
+*/
+
+
+
+</deployScript>
+  <undeployScript>// This script executes once when the channel is undeployed
+// You only have access to the globalMap and globalChannelMap here to persist data
+return;</undeployScript>
+  <properties version="3.5.1">
+    <clearGlobalChannelMap>true</clearGlobalChannelMap>
+    <messageStorageMode>PRODUCTION</messageStorageMode>
+    <encryptData>false</encryptData>
+    <removeContentOnCompletion>true</removeContentOnCompletion>
+    <removeOnlyFilteredOnCompletion>false</removeOnlyFilteredOnCompletion>
+    <removeAttachmentsOnCompletion>false</removeAttachmentsOnCompletion>
+    <initialState>STARTED</initialState>
+    <storeAttachments>false</storeAttachments>
+    <metaDataColumns>
+      <metaDataColumn>
+        <name>SOURCE</name>
+        <type>STRING</type>
+        <mappingName>mirth_source</mappingName>
+      </metaDataColumn>
+      <metaDataColumn>
+        <name>TYPE</name>
+        <type>STRING</type>
+        <mappingName>mirth_type</mappingName>
+      </metaDataColumn>
+    </metaDataColumns>
+    <attachmentProperties version="3.5.1">
+      <type>None</type>
+      <properties/>
+    </attachmentProperties>
+    <resourceIds class="linked-hash-map">
+      <entry>
+        <string>Default Resource</string>
+        <string>[Default Resource]</string>
+      </entry>
+    </resourceIds>
+  </properties>
+  <exportData>
+    <metadata>
+      <enabled>false</enabled>
+      <lastModified>
+        <time>1554802364400</time>
+        <timezone>Africa/Nairobi</timezone>
+      </lastModified>
+      <pruningSettings>
+        <pruneMetaDataDays>0</pruneMetaDataDays>
+        <archiveEnabled>true</archiveEnabled>
+      </pruningSettings>
+    </metadata>
+    <codeTemplateLibraries>
+      <codeTemplateLibrary version="3.5.1">
+        <id>44e01d55-c064-4dd2-b8ce-f4d6c733d335</id>
+        <name>SETS_GenerateJSON_HelperFunctions</name>
+        <revision>8</revision>
+        <lastModified>
+          <time>1541058110023</time>
+          <timezone>Africa/Nairobi</timezone>
+        </lastModified>
+        <description></description>
+        <includeNewChannels>false</includeNewChannels>
+        <enabledChannelIds>
+          <string>ffb8b3e1-5741-46c1-b820-d6be26d75f30</string>
+        </enabledChannelIds>
+        <disabledChannelIds>
+          <string>dd2e16ac-c55c-481e-8b29-baabea1f5037</string>
+          <string>db5d4ef7-76c7-4a10-a599-42f28d1b54b7</string>
+          <string>2f280c72-e265-4e1e-9d51-228f004b5dca</string>
+          <string>fa4add78-c307-4bc3-985c-1fe219f28666</string>
+          <string>5556a4ce-fbc4-4bfd-a3c7-573c6db4b2d7</string>
+          <string>da1d7a1e-69db-49b5-a5fe-90d762c2b264</string>
+          <string>6d8427b6-8f5d-4f9c-b08c-fb045cde3cc0</string>
+          <string>1a4082d4-5612-4a16-92c5-c404c4083d3f</string>
+          <string>cf7bfba4-0a45-46cd-94ea-099925df4a16</string>
+          <string>05169097-ac5e-405a-817c-ca5ce1af6b4f</string>
+          <string>e1b15f1c-5e46-436c-b3d0-24022ed7fa3a</string>
+          <string>d31458af-2e81-4569-9bd2-33c9336960c7</string>
+          <string>2f7656b6-0fc5-4b36-8706-88388c838b26</string>
+          <string>84a390f2-e766-4f3c-a5b7-edf4d5d12567</string>
+          <string>94c0ac89-95c6-4fd4-a626-772931d21070</string>
+          <string>dd835d09-a8b0-4e9c-ba5c-0bf71568b6a3</string>
+          <string>15bd225c-114d-4c0c-ae35-990783e51600</string>
+          <string>4add4e63-3dc2-4216-ae5a-0df42606b22f</string>
+          <string>c66e6120-550c-4afb-8290-d8e3c06b8170</string>
+          <string>40d2e79f-b700-4d7f-8bbf-93d9682da101</string>
+          <string>0991b245-c822-4cc9-9350-8a97569794ba</string>
+          <string>7529b807-c25c-4e81-bc5c-06c91b6e512e</string>
+          <string>1c8fe16c-8c67-4e7a-83c7-982127aa8ebd</string>
+          <string>4c9a4c9b-ddbb-493f-bf2d-ec81db363e69</string>
+          <string>fe053ea7-713f-4917-b7a9-8d9238e2ed04</string>
+          <string>562a3e9c-1994-4f9f-b717-e47a373f742e</string>
+          <string>fae8d277-689a-42d2-b258-f56c57401c64</string>
+          <string>a86896c1-afe0-4de4-a9fa-a3fd46045917</string>
+          <string>e2df2fdf-17d3-4a60-a9e7-2c78e4a7c543</string>
+          <string>d10f9306-bb5c-4ec8-a464-5172deb38098</string>
+          <string>e92d4861-98da-453d-9315-316817b98493</string>
+          <string>1350de49-6c5f-42dd-92e4-1aa7cf5aea0f</string>
+          <string>48ac6ae0-1126-446d-bd5c-c2b97fbb2602</string>
+          <string>01a5a883-f21a-4a26-a576-70500cd5f603</string>
+          <string>1a657bf5-4e8b-47ca-b76a-a95cac5beab9</string>
+          <string>4935f6bb-85c2-4faf-983c-8395258761d8</string>
+          <string>41c2ffb3-8f3f-404f-86a4-1f291b0136e1</string>
+          <string>49342551-7f6f-4816-8686-7b8d4e0da6f7</string>
+          <string>0861c921-3c08-43f5-bef0-f5d0f26e5f61</string>
+        </disabledChannelIds>
+        <codeTemplates>
+          <codeTemplate version="3.5.1">
+            <id>b3f420c8-48ce-4eaa-919a-7f704beb4da6</id>
+            <name>SourceDBConn</name>
+            <revision>11</revision>
+            <lastModified>
+              <time>1551168684365</time>
+              <timezone>Africa/Nairobi</timezone>
+            </lastModified>
+            <contextSet>
+              <delegate>
+                <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
+                <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
+                <contextType>DESTINATION_DISPATCHER</contextType>
+                <contextType>SOURCE_RECEIVER</contextType>
+                <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
+              </delegate>
+            </contextSet>
+            <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
+              <type>FUNCTION</type>
+              <code>function HISSgetDbConn() {
+	var dbConn = globalMap.get(&quot;LinkagegetDbConn&quot;);
+	
+	if (dbConn == null || dbConn.getConnection().isClosed())
+	{
+		//dbConn = DatabaseConnectionFactory.createDatabaseConnection(&apos;net.sourceforge.jtds.jdbc.Driver&apos;,&apos;jdbc:jtds:sqlserver://localhost:1433/AlphaDSSLinkage_Redesigned;instance=MSSQLSERVER&apos;,&apos;sa&apos;,&apos;wafteWAFTE@@&apos;);
+
+       dbConn = DatabaseConnectionFactory.createDatabaseConnection(&apos;net.sourceforge.jtds.jdbc.Driver&apos;,&apos;jdbc:jtds:sqlserver://localhost:1433/AlphaDSSLinkage_New_Redesigned;instance=MSSQLSERVER&apos;,&apos;sa&apos;,&apos;mane2014&apos;);
+
+     // dbConn = DatabaseConnectionFactory.createDatabaseConnection(&apos;net.sourceforge.jtds.jdbc.Driver&apos;,&apos;jdbc:jtds:sqlserver://localhost:1433/AlphaDSSLinkage_Latest;instance=MSSQL2014&apos;,&apos;sa&apos;,&apos;wafteWAFTE@@&apos;);
+		
+		globalMap.put(&quot;LinkagegetDbConn&quot;, dbConn);
+	}
+
+	return dbConn;
+}</code>
+            </properties>
+          </codeTemplate>
+        </codeTemplates>
+      </codeTemplateLibrary>
+    </codeTemplateLibraries>
+  </exportData>
+</channel>

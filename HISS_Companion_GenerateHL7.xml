@@ -1,0 +1,3232 @@
+<channel version="3.5.1">
+  <id>d31458af-2e81-4569-9bd2-33c9336960c7</id>
+  <nextMetaDataId>6</nextMetaDataId>
+  <name>HISS_Companion_GenerateHL7</name>
+  <description></description>
+  <revision>47</revision>
+  <sourceConnector version="3.5.1">
+    <metaDataId>0</metaDataId>
+    <name>sourceConnector</name>
+    <properties class="com.mirth.connect.connectors.jdbc.DatabaseReceiverProperties" version="3.5.1">
+      <pluginProperties/>
+      <pollConnectorProperties version="3.5.1">
+        <pollingType>INTERVAL</pollingType>
+        <pollOnStart>false</pollOnStart>
+        <pollingFrequency>10000</pollingFrequency>
+        <pollingHour>0</pollingHour>
+        <pollingMinute>0</pollingMinute>
+        <cronJobs/>
+        <pollConnectorPropertiesAdvanced>
+          <weekly>true</weekly>
+          <inactiveDays>
+            <boolean>false</boolean>
+            <boolean>false</boolean>
+            <boolean>false</boolean>
+            <boolean>false</boolean>
+            <boolean>false</boolean>
+            <boolean>false</boolean>
+            <boolean>false</boolean>
+            <boolean>false</boolean>
+          </inactiveDays>
+          <dayOfMonth>1</dayOfMonth>
+          <allDay>true</allDay>
+          <startingHour>8</startingHour>
+          <startingMinute>0</startingMinute>
+          <endingHour>17</endingHour>
+          <endingMinute>0</endingMinute>
+        </pollConnectorPropertiesAdvanced>
+      </pollConnectorProperties>
+      <sourceConnectorProperties version="3.5.1">
+        <responseVariable>None</responseVariable>
+        <respondAfterProcessing>true</respondAfterProcessing>
+        <processBatch>false</processBatch>
+        <firstResponse>false</firstResponse>
+        <processingThreads>1</processingThreads>
+        <resourceIds class="linked-hash-map">
+          <entry>
+            <string>Default Resource</string>
+            <string>[Default Resource]</string>
+          </entry>
+        </resourceIds>
+        <queueBufferSize>1000</queueBufferSize>
+      </sourceConnectorProperties>
+      <driver>net.sourceforge.jtds.jdbc.Driver</driver>
+      <url>jdbc:jtds:sqlserver://KECL-HIS-014293:1433/ALphaDSSLinkage</url>
+      <username>sa</username>
+      <password>wafteWAFTE@@</password>
+      <select>importPackage(java.io);
+importPackage(org.apache.commons.io);
+var file = new File(&apos;C:/Program Files/Mirth Connect/conf/runtime.txt&apos;);
+var starting_visit_date = FileUtils.readFileToString(file, &quot;UTF-8&quot;);
+var dbConn;
+
+var max = LastVisitLog();
+
+var current_facility=$g(&apos;facility_code&apos;);
+
+try {
+
+//var Query = &quot;SELECT visit_id,system_id,visit_date,created_at,created_by from Anc.visits where sent_flag=0 and visit_date &gt;= &apos;&quot;+ starting_visit_date +&quot;&apos;&quot;;
+
+//var Query = &quot;SELECT anc_visit_id,system_id,visit_date,created_at,created_by,modified_at from Anc.visits where sent_flag=0&quot;;
+
+var Query = &quot;SELECT v.anc_visit_id,v.system_id,visit_date,created_at,v.created_by,modified_at from Anc.visits v &quot;;
+	  Query += &quot; JOIN registry.person p on v.system_id=p.system_id where v.sent_flag=0 and p.facility_mflcode=&quot;+ current_facility +&quot;&quot;;
+
+var result = HISSgetDbConn().executeCachedQuery(Query);	
+
+return result;
+	
+	
+	//dbConn = DatabaseConnectionFactory.createDatabaseConnection(&apos;net.sourceforge.jtds.jdbc.Driver&apos;,&apos;jdbc:jtds:sqlserver://KECL-HIS-014293:1433/ALphaDSSLinkage&apos;,&apos;sa&apos;,&apos;wafteWAFTE@@&apos;);
+
+	// You may access this result below with $(&apos;column_name&apos;)
+	
+} 
+
+finally {
+	if (HISSgetDbConn()) { 
+		HISSgetDbConn().close();
+	}
+}</select>
+      <update>importPackage(java.io);
+importPackage(org.apache.commons.io);
+var file = new File(&apos;C:/Program Files/Mirth Connect/conf/runtime.txt&apos;);
+var starting_visit_date = FileUtils.readFileToString(file, &quot;UTF-8&quot;);
+
+var max = LastVisitLog();
+
+try {
+	
+     sql = &quot;update Anc.visits set sent_flag=&apos;1&apos; WHERE system_id=&apos;&quot;+$(&apos;system_id&apos;)+&quot;&apos;&quot;;
+     HISSgetDbConn().executeUpdate(sql);
+
+     if(max &gt;= starting_visit_date){
+		var new_starting_visit_date=max;
+		FileUtils.writeStringToFile(file, new_starting_visit_date, &quot;UTF-8&quot;, false);
+
+     }
+	
+
+
+} finally {
+	if (HISSgetDbConn()) { 
+		HISSgetDbConn().close();
+	}
+}
+</update>
+      <useScript>true</useScript>
+      <aggregateResults>false</aggregateResults>
+      <cacheResults>true</cacheResults>
+      <keepConnectionOpen>true</keepConnectionOpen>
+      <updateMode>3</updateMode>
+      <retryCount>3</retryCount>
+      <retryInterval>10000</retryInterval>
+      <fetchSize>1000</fetchSize>
+      <encoding>DEFAULT_ENCODING</encoding>
+    </properties>
+    <transformer version="3.5.1">
+      <elements>
+        <com.mirth.connect.plugins.mapper.MapperStep>
+          <name>anc_visit_id</name>
+          <sequenceNumber>0</sequenceNumber>
+          <variable>anc_visit_id</variable>
+          <mapping>msg[&apos;anc_visit_id&apos;].toString()</mapping>
+          <defaultValue></defaultValue>
+          <replacements/>
+          <scope>CHANNEL</scope>
+        </com.mirth.connect.plugins.mapper.MapperStep>
+        <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+          <name>TranformVisitDate</name>
+          <sequenceNumber>1</sequenceNumber>
+          <script>var visit_date = DateUtil.convertDate(&apos;yyyy-MM-dd&apos;, &apos;yyyyMMdd&apos;, msg[&apos;visit_date&apos;].toString());
+
+$c(&apos;visit_date&apos;,visit_date);</script>
+        </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        <com.mirth.connect.plugins.mapper.MapperStep>
+          <name>system_id</name>
+          <sequenceNumber>2</sequenceNumber>
+          <variable>system_id</variable>
+          <mapping>msg[&apos;system_id&apos;].toString()</mapping>
+          <defaultValue></defaultValue>
+          <replacements/>
+          <scope>CHANNEL</scope>
+        </com.mirth.connect.plugins.mapper.MapperStep>
+        <com.mirth.connect.plugins.mapper.MapperStep>
+          <name>created_at</name>
+          <sequenceNumber>3</sequenceNumber>
+          <variable>created_at</variable>
+          <mapping>msg[&apos;created_at&apos;].toString()</mapping>
+          <defaultValue></defaultValue>
+          <replacements/>
+          <scope>CHANNEL</scope>
+        </com.mirth.connect.plugins.mapper.MapperStep>
+        <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+          <name>GetClientDemographics</name>
+          <sequenceNumber>4</sequenceNumber>
+          <script>var reg_date=&quot;&quot;;
+var pfile_ref_type=&quot;&quot;;
+var pfile_ref=&quot;&quot;;
+var firstname=&quot;&quot;;
+var middlename=&quot;&quot;;
+var lastname=&quot;&quot;;
+var dob=&quot;&quot;;
+var gender=&quot;&quot;;
+var marital_status=0;
+var mother_firstname=&quot;&quot;;
+var mother_middlename=&quot;&quot;;
+var mother_lastname=&quot;&quot;;
+var village_name=&quot;&quot;;
+var father_firstname=&quot;&quot;;
+var father_middlename=&quot;&quot;;
+var father_lastname=&quot;&quot;;
+var compound_firstname=&quot;&quot;;
+var compound_middlename=&quot;&quot;;
+var compound_lastname=&quot;&quot;;
+var facility_mflcode=&quot;&quot;;
+var residency_start_date=&quot;&quot;;
+var date_modified=&quot;&quot;;
+
+
+
+
+
+
+try {
+
+
+/*
+		
+var  Query = &quot;SELECT p.system_id,&quot;;
+	Query += &quot;reg_date,pfile_ref_type,pfile_ref,firstname,middlename,lastname,&quot;;
+	Query += &quot;dob,gender,mstatus,mfname,mjname,mlname,&quot;;
+	Query += &quot;village_name,ffname,fjname,flname,&quot;;
+	Query += &quot;chfname,chmname,chlname,facility_mflcode &quot;;
+	Query += &quot;from registry.person where system_id= &quot;+msg[&apos;system_id&apos;].toString();
+
+	*/
+
+
+	var  Query = &quot;SELECT system_id,&quot;;
+	Query += &quot;reg_date,firstname,middlename,lastname,&quot;;
+	Query += &quot;dob,gender,mstatus,mfname,mjname,mlname,&quot;;
+	Query += &quot;ffname,fjname,flname,&quot;;
+	Query += &quot;chfname,chmname,chlname,facility_mflcode,dateAtCurResidence,date_modified &quot;;
+	Query += &quot;from registry.person where system_id= &apos;&quot;+ msg[&apos;system_id&apos;].toString() +&quot;&apos;;&quot;;
+
+	
+			
+		
+var result = HISSgetDbConn().executeCachedQuery(Query);	
+
+
+
+	
+	//return result;
+
+
+	while(result.next())
+	
+	{
+     	
+     	reg_date=result.getString(&quot;reg_date&quot;);
+     	firstname = result.getString(&quot;firstname&quot;);
+     	middlename = result.getString(&quot;middlename&quot;);
+     	lastname = result.getString(&quot;lastname&quot;);
+     	gender = result.getString(&quot;gender&quot;);
+     	dob = result.getString(&quot;dob&quot;);
+     	marital_status=result.getString(&quot;mstatus&quot;);
+     	mother_firstname=result.getString(&quot;mfname&quot;);
+     	mother_middlename=result.getString(&quot;mjname&quot;);
+     	mother_lastname=result.getString(&quot;mlname&quot;);
+     	//village_name=result.getString(&quot;village_name&quot;);
+     	father_firstname=result.getString(&quot;ffname&quot;);
+     	father_middlename=result.getString(&quot;fjname&quot;);
+     	father_lastname=result.getString(&quot;flname&quot;);
+     	compound_firstname=result.getString(&quot;chfname&quot;);
+     	compound_middlename=result.getString(&quot;chmname&quot;);
+     	compound_lastname=result.getString(&quot;chlname&quot;);
+     	facility_mflcode=result.getInt(&quot;facility_mflcode&quot;);
+     	residency_start_date=result.getString(&quot;dateAtCurResidence&quot;);
+     	date_modified=result.getString(&quot;date_modified&quot;);
+
+	}
+
+
+
+
+	} 
+
+finally {
+	if (HISSgetDbConn()) { 
+		HISSgetDbConn().close();
+	}
+}
+
+
+if(dob)
+
+{
+	dob = DateUtil.convertDate(&apos;yyyy-MM-dd&apos;, &apos;yyyyMMdd&apos;,dob);
+	
+}
+
+if(reg_date)
+
+{
+	reg_date = DateUtil.convertDate(&apos;yyyy-MM-dd&apos;, &apos;yyyyMMdd&apos;,reg_date);
+	
+}
+
+
+$c(&apos;reg_date&apos;,reg_date);
+$c(&apos;facility_mflcode&apos;,facility_mflcode);
+$c(&apos;marital_status&apos;,marital_status);
+$c(&apos;firstname&apos;,firstname);
+$c(&apos;middlename&apos;,middlename);
+$c(&apos;lastname&apos;,lastname);
+
+
+$c(&apos;mother_firstname&apos;,mother_firstname);
+$c(&apos;mother_middlename&apos;,mother_middlename);
+$c(&apos;mother_lastname&apos;,mother_lastname);
+$c(&apos;father_firstname&apos;,father_firstname);
+$c(&apos;father_middlename&apos;,father_middlename);
+$c(&apos;father_lastname&apos;,father_lastname);
+$c(&apos;compound_firstname&apos;,compound_firstname);
+$c(&apos;compound_middlename&apos;,compound_middlename);
+$c(&apos;compound_lastname&apos;,compound_lastname);
+$c(&apos;gender&apos;,gender);
+$c(&apos;dob&apos;,dob);
+$c(&apos;residency_start_date&apos;,residency_start_date);
+$c(&apos;date_modified&apos;,date_modified);</script>
+        </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+          <name>GetHDSSLinkageStatus</name>
+          <sequenceNumber>5</sequenceNumber>
+          <script>var HDSS_ID=&quot;&quot;;
+var is_hdss=0;
+
+
+var  Query = &quot;SELECT top 1 ISNULL(is_hdss, 0) as is_hdss &quot;;
+Query += &quot;from registry.person_match where system_id IS NOT NULL and system_id != &apos;&apos; and is_voided=0 and match_state =1 and system_id= &apos;&quot;+ msg[&apos;system_id&apos;].toString() +&quot;&apos;;&quot;;
+
+
+var result = HISSgetDbConn().executeCachedQuery(Query);	
+
+
+
+	
+	//return result;
+
+
+	while(result.next())
+	
+	{
+     	
+     	is_hdss=result.getString(&quot;is_hdss&quot;);
+
+	}
+
+
+
+$c(&apos;is_hdss&apos;,is_hdss);
+
+//now retrieving the study id</script>
+        </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+          <name>GetRecordedObservations and Vitals</name>
+          <sequenceNumber>6</sequenceNumber>
+          <script>var obx_obj = {};
+
+try 
+
+{
+		
+     var  Query = &quot;SELECT system_id,&quot;;
+	Query += &quot;[syphilis],[haemoglobin],&quot;;
+	Query += &quot;[who_stage],[cd4_count],[art_start_date],[tb_status],cancer_screening_method,[cervical_cancer_screening],[viral_load]&quot;;
+	Query += &quot;,[created_at] &quot;;
+	Query += &quot;from [Anc].[clinical_observations] where system_id=&apos;&quot;+$(&apos;system_id&apos;)+&quot;&apos; and anc_visit_id= &apos;&quot;+ msg[&apos;anc_visit_id&apos;].toString() +&quot;&apos;;&quot;;
+		
+	
+		
+var result = HISSgetDbConn().executeCachedQuery(Query);	
+
+	while(result.next())
+	
+	{
+     	obx_obj.syphilis=result.getString(&quot;syphilis&quot;);
+     	obx_obj.cd4_count=result.getString(&quot;cd4_count&quot;);
+     	obx_obj.haemoglobin=result.getString(&quot;haemoglobin&quot;);
+     	obx_obj.who_stage=result.getString(&quot;who_stage&quot;);
+     	obx_obj.tb_status=result.getString(&quot;tb_status&quot;);
+     	obx_obj.cervical_cancer_screening=result.getString(&quot;cervical_cancer_screening&quot;);
+     	obx_obj.cancer_screening_method=result.getString(&quot;cancer_screening_method&quot;);
+     	obx_obj.art_start_date=result.getString(&quot;art_start_date&quot;);
+     	obx_obj.viral_load=result.getString(&quot;viral_load&quot;);
+     	
+	}
+	
+} 
+
+finally {
+	if (HISSgetDbConn()) { 
+		HISSgetDbConn().close();
+	}
+}
+
+
+
+$c(&apos;obx_obj&apos;, obx_obj);
+
+
+
+//now retriveing the vital recorded for the client
+
+var vital_obj = {};
+
+try 
+
+{
+
+		
+var  Query = &quot;SELECT system_id,&quot;;
+	Query += &quot;[client_weight],[gestation_weeks],[blood_pressure],&quot;;
+	Query += &quot;[parity],[gravidae],[LMP],[EDD],[created_at] &quot;;
+	Query += &quot;from Anc.vitals where system_id=&apos;&quot;+$(&apos;system_id&apos;)+&quot;&apos; and anc_visit_id= &apos;&quot;+ msg[&apos;anc_visit_id&apos;].toString() +&quot;&apos;;&quot;;
+		
+	
+		
+var result = HISSgetDbConn().executeCachedQuery(Query);	
+
+	while(result.next())
+	
+	{
+     	vital_obj.client_Weight=result.getString(&quot;client_Weight&quot;);
+     	vital_obj.gestation_weeks=result.getString(&quot;gestation_weeks&quot;);
+     	vital_obj.blood_pressure=result.getString(&quot;blood_pressure&quot;);
+     	vital_obj.parity=result.getString(&quot;parity&quot;);
+     	vital_obj.gravidae=result.getString(&quot;gravidae&quot;);
+     	vital_obj.LMP=result.getString(&quot;LMP&quot;);
+     	vital_obj.EDD=result.getString(&quot;EDD&quot;);
+     	
+
+	}
+	
+} 
+
+finally {
+	if (HISSgetDbConn()) { 
+		HISSgetDbConn().close();
+	}
+}
+
+
+
+$c(&apos;vital_obj&apos;, vital_obj);
+
+
+
+//get treatment information
+
+
+var treatment_obj = {};
+
+try 
+
+{
+
+	
+var Query = &quot;SELECT system_id,&quot;;
+	Query += &quot;[CTX_given],[Mother_NVP],[Mother_AZT],&quot;;
+	Query += &quot;[Mother_HAART],[Baby_NVP] &quot;;
+	Query += &quot;from [Anc].[ord_pharmacy] where system_id=&apos;&quot;+$(&apos;system_id&apos;)+&quot;&apos; and anc_visit_id= &apos;&quot;+ msg[&apos;anc_visit_id&apos;].toString() +&quot;&apos;;&quot;;
+		
+	
+		
+var result = HISSgetDbConn().executeCachedQuery(Query);	
+
+	while(result.next())
+	
+	{
+     	
+     	treatment_obj.CTX_given=result.getString(&quot;CTX_given&quot;);
+     	treatment_obj.Mother_NVP=result.getString(&quot;Mother_NVP&quot;);
+     	treatment_obj.Mother_AZT=result.getString(&quot;Mother_AZT&quot;);
+     	treatment_obj.Mother_HAART=result.getString(&quot;Mother_HAART&quot;);
+     	treatment_obj.Baby_NVP=result.getString(&quot;Baby_NVP&quot;);
+     	
+     	
+
+	}
+	
+} 
+
+finally {
+	if (HISSgetDbConn()) { 
+		HISSgetDbConn().close();
+	}
+}
+
+
+
+$c(&apos;treatment_obj&apos;, treatment_obj);
+
+
+
+//get other conditions
+
+
+$c(&apos;O_Conditions&apos;,[]);
+
+try 
+
+{
+
+		
+var  Query = &quot;SELECT system_id,&quot;;
+	Query += &quot;[visit_id],[condition_name] &quot;;
+	Query += &quot;from [Anc].[other_conditions] where system_id=&apos;&quot;+$(&apos;system_id&apos;)+&quot;&apos; and anc_visit_id= &apos;&quot;+ msg[&apos;anc_visit_id&apos;].toString() +&quot;&apos;;&quot;;
+		
+	
+		
+var result = HISSgetDbConn().executeCachedQuery(Query);	
+
+	while(result.next())
+	
+	{
+     	var otherconditions_obj = {};
+     	otherconditions_obj.condition_name=result.getString(&quot;condition_name&quot;);
+     	
+     	if(otherconditions_obj.condition_name != null &amp;&amp; otherconditions_obj.condition_name !=&apos;&apos;)
+     	{
+               otherconditions_obj.condition_value=&quot;YES&quot;;
+     		
+     		}
+
+     	$c(&apos;O_Conditions&apos;).push(otherconditions_obj);
+     	    	
+
+	}
+	
+} 
+
+finally {
+	if (HISSgetDbConn()) { 
+		HISSgetDbConn().close();
+	}
+}
+
+
+
+//get other treatments
+
+
+$c(&apos;O_Treatment&apos;,[]);
+
+try 
+
+{
+
+		
+var  Query = &quot;SELECT system_id,&quot;;
+	Query += &quot;[visit_id],[treatment_name] &quot;;
+	Query += &quot;from [Anc].[other_treatment] where system_id=&apos;&quot;+$(&apos;system_id&apos;)+&quot;&apos; and anc_visit_id= &apos;&quot;+ msg[&apos;anc_visit_id&apos;].toString() +&quot;&apos;;&quot;;
+		
+	
+		
+var result = HISSgetDbConn().executeCachedQuery(Query);	
+
+	while(result.next())
+	
+	{
+          var treatment=&quot;&quot;;
+		
+     	var othertreatment_obj = {};
+     	
+     	treatment_name=result.getString(&quot;treatment_name&quot;);
+     	
+     	if(treatment_name != null &amp;&amp; treatment_name !=&apos;&apos;)
+     	{
+               othertreatment_obj.treatment_name=treatment_name + &quot;_TREATMENT&quot;;
+     		
+               othertreatment_obj.treatment_value=&quot;YES&quot;;
+     		
+     		}
+
+     	$c(&apos;O_Treatment&apos;).push(othertreatment_obj);
+     	    	
+
+	}
+	
+} 
+
+finally {
+	if (HISSgetDbConn()) { 
+		HISSgetDbConn().close();
+	}
+}
+
+
+//retrieving consent information
+$c(&apos;Consent_A&apos;,[]);
+
+try 
+
+{
+
+		
+var  Query = &quot;SELECT system_id,&quot;;
+	Query += &quot;consent_type,consent_value,date_consented &quot;;
+	Query += &quot;from [Anc].[consent] where system_id= &apos;&quot;+ msg[&apos;system_id&apos;].toString() +&quot;&apos;;&quot;;
+		
+	
+	
+var result = HISSgetDbConn().executeCachedQuery(Query);	
+
+	while(result.next())
+	
+	{
+     	C_a = {};
+     	C_a.consent_type=result.getString(&quot;consent_type&quot;);
+		C_a.consent_value=result.getString(&quot;consent_value&quot;);
+		
+		C_a.date_consented = DateUtil.convertDate(&apos;yyyy-MM-dd&apos;, &apos;yyyyMMdd&apos;,result.getString(&quot;date_consented&quot;));
+		
+		if(C_a.consent_value != null &amp;&amp; C_a.consent_value !=&apos;&apos;)
+     	{
+     	 	$c(&apos;Consent_A&apos;).push(C_a);
+		}   	
+
+	}
+	
+} 
+
+finally {
+	if (HISSgetDbConn()) { 
+		HISSgetDbConn().close();
+	}
+}
+
+
+$c(&apos;Pregnancy_A&apos;,[]);
+
+//getting pregnancy details
+try 
+
+{
+
+	
+var Query = &quot;SELECT system_id,&quot;;
+	Query += &quot;pregnancy_value,pregnancy_episode,created_at &quot;;
+	Query += &quot;from [registry].[pregnancy] where system_id= &apos;&quot;+ msg[&apos;system_id&apos;].toString() +&quot;&apos;;&quot;;
+		
+	
+		
+var result = HISSgetDbConn().executeCachedQuery(Query);	
+
+	while(result.next())
+	
+	{
+          P_a = {};
+     	
+     	var is_pregnant=result.getString(&quot;pregnancy_value&quot;);
+     	var pregnancy_episode=result.getString(&quot;pregnancy_episode&quot;);
+     	var pregnancy_date=result.getString(&quot;created_at&quot;);
+
+          P_a.pregnancy_value=is_pregnant + &quot;-&quot; +pregnancy_episode;
+          P_a.pregnancy_date=pregnancy_date;
+          P_a.event_name=&quot;PREGNANCY&quot;;
+
+          if(is_pregnant != null &amp;&amp; is_pregnant != &apos;&apos; &amp;&amp; is_pregnant==&apos;YES&apos;)
+          {
+        
+                 $c(&apos;Pregnancy_A&apos;).push(P_a);
+          }
+          
+     	
+     	
+     	
+
+	}
+	
+} 
+
+finally {
+	if (HISSgetDbConn()) { 
+		HISSgetDbConn().close();
+	}
+}
+
+
+
+
+//drug details
+
+var drug_obj = {};
+
+try 
+
+{
+
+
+var Query = &quot;SELECT system_id,&quot;;
+	Query += &quot;[deworming],[Iptp_dose],[tt_dose],&quot;;
+	Query += &quot;[iron],[folic_acid],itn_dose &quot;;
+	Query += &quot;from [Anc].[ord_treatment] where system_id=&apos;&quot;+$(&apos;system_id&apos;)+&quot;&apos; and anc_visit_id= &apos;&quot;+ msg[&apos;anc_visit_id&apos;].toString() +&quot;&apos;;&quot;;
+		
+	
+		
+var result = HISSgetDbConn().executeCachedQuery(Query);	
+
+	while(result.next())
+	
+	{
+     	
+     	drug_obj.deworming=result.getString(&quot;deworming&quot;);
+     	drug_obj.Iptp_dose=result.getString(&quot;Iptp_dose&quot;);
+     	drug_obj.tt_dose=result.getString(&quot;tt_dose&quot;);
+     	drug_obj.iron=result.getString(&quot;iron&quot;);
+     	drug_obj.folic_acid=result.getString(&quot;folic_acid&quot;);
+     	drug_obj.itn_dose=result.getString(&quot;itn_dose&quot;);
+     	
+     	
+
+	}
+	
+} 
+
+finally {
+	if (HISSgetDbConn()) { 
+		HISSgetDbConn().close();
+	}
+}
+
+
+
+$c(&apos;drug_obj&apos;, drug_obj);
+
+
+
+
+//getting details of test results of ANCclients
+$c(&apos;Sero_Test&apos;,[]);
+
+try
+{
+
+var  Query = &quot;SELECT distinct system_id,&quot;;
+	Query += &quot;test_type,test_result,test_point,test_date &quot;;
+	Query += &quot;from [registry].[test_result] where is_duplicate=0 and system_id= &apos;&quot;+ msg[&apos;system_id&apos;].toString() +&quot;&apos;;&quot;;
+		
+	
+	
+var result = HISSgetDbConn().executeCachedQuery(Query);	
+
+	while(result.next())
+	
+	{
+     	S_t = {};
+     var test_name=result.getString(&quot;test_type&quot;);
+     S_t.test_type=test_name + &quot;_TEST&quot;;
+     
+	var test_point=result.getString(&quot;test_point&quot;);
+     var test_result=result.getString(&quot;test_result&quot;);
+
+     S_t.test_value=test_point + &quot;-&quot; +test_result;
+     
+	S_t.test_date = DateUtil.convertDate(&apos;yyyy-MM-dd&apos;, &apos;yyyyMMdd&apos;,result.getString(&quot;test_date&quot;));
+		
+		
+     	 	$c(&apos;Sero_Test&apos;).push(S_t);
+		 	
+
+	}
+	
+} 
+
+finally {
+	if (HISSgetDbConn()) { 
+		HISSgetDbConn().close();
+	}
+}</script>
+        </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        <com.mirth.connect.plugins.mapper.MapperStep>
+          <name>created_by</name>
+          <sequenceNumber>7</sequenceNumber>
+          <variable>created_by</variable>
+          <mapping>msg[&apos;created_by&apos;].toString()</mapping>
+          <defaultValue></defaultValue>
+          <replacements/>
+          <scope>CHANNEL</scope>
+        </com.mirth.connect.plugins.mapper.MapperStep>
+        <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+          <name>ParseMSH</name>
+          <sequenceNumber>8</sequenceNumber>
+          <script>tmp[&apos;MSH&apos;][&apos;MSH.4&apos;][&apos;MSH.4.1&apos;]=channelMap.get(&apos;facility_mflcode&apos;);
+
+
+//convert the registration date to an HL7 compliant format
+
+tmp[&apos;MSH&apos;][&apos;MSH.7&apos;][&apos;MSH.7.1&apos;]=channelMap.get(&apos;reg_date&apos;);
+
+
+//tmp[&apos;MSH&apos;][&apos;MSH.9&apos;][&apos;MSH.9.1&apos;]=&apos;ADT^04&apos;;
+
+tmp[&apos;MSH&apos;][&apos;MSH.14&apos;][&apos;MSH.14.1&apos;]=$(&apos;created_by&apos;);</script>
+        </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+          <name>Location</name>
+          <sequenceNumber>9</sequenceNumber>
+          <script>$c(&apos;Location&apos;,[]);
+
+
+try {
+	
+
+var Query = &quot;select distinct system_id,name,location_value,date_created&quot;;
+    Query += &quot; FROM [registry].[person_location] pl&quot;;
+    Query += &quot; join [reference].[config_location_type] cl on cl.config_location_id=pl.config_location_id where system_id= &apos;&quot;+ msg[&apos;system_id&apos;].toString() +&quot;&apos;;&quot;;
+
+var result = HISSgetDbConn().executeCachedQuery(Query);
+
+while(result.next())
+{
+	      
+           var Loc = {};
+                    
+           Loc.location_type=result.getString(&quot;name&quot;);
+           var clob = result.getClob(&quot;location_value&quot;);
+           Loc.location_value = clob.getSubString(1,clob.length());
+           //Loc.location_value=result.getString(&quot;location_value&quot;);
+     	  	//logger.info(Loc.location_value);
+     	    
+          $c(&apos;Location&apos;).push(Loc);	
+     	
+     	
+     
+     	
+
+} 
+} finally {
+	if (HISSgetDbConn()) { 
+		HISSgetDbConn().close();
+	}
+}</script>
+        </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+          <name>Identifiers</name>
+          <sequenceNumber>10</sequenceNumber>
+          <script>$c(&apos;Identifiers&apos;,[]);
+
+
+try {
+	
+
+var Query = &quot;select identifier,identifier_type_name,date_created,modified_at&quot;;
+    Query += &quot; FROM [registry].[person_identifier] pid&quot;;
+    Query += &quot; join [reference].[config_identifier_types] ci on ci.identifier_type_id=pid.identifier_type_id where system_id= &apos;&quot;+ msg[&apos;system_id&apos;].toString() +&quot;&apos;;&quot;;
+
+var result = HISSgetDbConn().executeCachedQuery(Query);
+
+while(result.next())
+{
+                    
+           var Identifier = {};
+           Identifier.identifier_type=result.getString(&quot;identifier_type_name&quot;);
+           Identifier.identifier_value = result.getString(&quot;identifier&quot;);
+           Identifier.date_created = result.getString(&quot;date_created&quot;);
+           Identifier.modified_at = result.getString(&quot;modified_at&quot;);
+     	  	
+     	     
+          $c(&apos;Identifiers&apos;).push(Identifier);	
+     	
+     
+     	
+
+} 
+} finally {
+	if (HISSgetDbConn()) { 
+		HISSgetDbConn().close();
+	}
+}</script>
+        </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+          <name>CCCANCAvailability</name>
+          <sequenceNumber>11</sequenceNumber>
+          <script>//retrieving consent information
+
+var current_visit_date=DateUtil.convertDate(&apos;yyyyMMdd&apos;, &apos;yyyy-MM-dd&apos;, $(&apos;visit_date&apos;));
+
+$c(&apos;ANC_A&apos;,[]);
+
+try 
+{
+	
+var  Query = &quot;SELECT system_id,&quot;;
+	Query += &quot;Status,Unavailability_reason,Date_created &quot;;
+	Query += &quot;from [Anc].[dtl_anc_records_availability] where Date_created=&apos;&quot; + current_visit_date + &quot;&apos; and system_id= &apos;&quot;+ msg[&apos;system_id&apos;].toString() +&quot;&apos;;&quot;;
+		
+var result = HISSgetDbConn().executeCachedQuery(Query);	
+
+	while(result.next())
+	
+	{
+		A_a = {};
+     	A_a.availability_name=&quot;ANC_RECORDS_AVAILABLE&quot;;
+     	//var availability_status=result.getString(&quot;Status&quot;);
+		//var unavailability_reason=result.getString(&quot;Unavailability_reason&quot;);
+
+          var availability_status=result.getString(&quot;Status&quot;);
+		
+		var clob = result.getClob(&quot;Unavailability_reason&quot;);
+           var unavailability_reason = clob.getSubString(1,clob.length());
+
+          A_a.availability_value=availability_status +&quot;-&quot; +unavailability_reason;
+		A_a.availability_date = DateUtil.convertDate(&apos;yyyy-MM-dd&apos;, &apos;yyyyMMdd&apos;,result.getString(&quot;Date_created&quot;));
+		
+		if(A_a.availability_value != null &amp;&amp; A_a.availability_value !=&apos;&apos;)
+     	{
+     	 	$c(&apos;ANC_A&apos;).push(A_a);
+		}   	
+
+	}
+	
+} 
+
+catch (err){
+		
+		logger.error(&quot;The following error occurred when running &quot;+err);
+}
+
+
+
+
+
+
+try 
+{
+
+	$c(&apos;CCC_A&apos;,[]);
+	
+var  Query = &quot;SELECT system_id,&quot;;
+	Query += &quot;Status,Unavailability_reason,Date_created &quot;;
+	Query += &quot;from [Anc].[dtl_ccc_records_availability] where system_id= &apos;&quot;+ msg[&apos;system_id&apos;].toString() +&quot;&apos;;&quot;;
+		
+var result = HISSgetDbConn().executeCachedQuery(Query);	
+
+	while(result.next())
+	
+	{
+		CC_a = {};
+     	CC_a.availability_name=&quot;CCC_RECORDS_AVAILABLE&quot;;
+     	var availability_status=result.getString(&quot;Status&quot;);
+     	//var unavailability_reason=result.getString(&quot;Unavailability_reason&quot;);
+		var clob = result.getClob(&quot;Unavailability_reason&quot;);
+           var unavailability_reason = clob.getSubString(1,clob.length());
+
+          CC_a.availability_value=availability_status +&quot;-&quot; +unavailability_reason;
+		CC_a.availability_date = DateUtil.convertDate(&apos;yyyy-MM-dd&apos;, &apos;yyyyMMdd&apos;,result.getString(&quot;Date_created&quot;));
+		
+		if(CC_a.availability_value != null &amp;&amp; CC_a.availability_value !=&apos;&apos;)
+     	{
+     	 	$c(&apos;CCC_A&apos;).push(CC_a);
+		}   	
+
+	}
+	
+} 
+
+catch (err){
+		
+		logger.error(&quot;The following error occurred when running &quot;+err);
+}
+
+
+
+
+finally {
+	if (HISSgetDbConn()) { 
+		HISSgetDbConn().close();
+	}
+}</script>
+        </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+          <name>FinalHIVTestResult</name>
+          <sequenceNumber>12</sequenceNumber>
+          <script>var test_date=&quot;&quot;;
+
+$c(&apos;TArray&apos;,[]);
+
+
+var  Query = &quot;SELECT distinct test_result,test_date &quot;;
+Query += &quot;from registry.final_test_result where system_id IS NOT NULL and system_id !=&apos;&apos; and is_voided=0 and system_id= &apos;&quot;+ msg[&apos;system_id&apos;].toString() +&quot;&apos;;&quot;;
+
+
+var result = HISSgetDbConn().executeCachedQuery(Query);	
+
+
+
+	//return result;
+
+
+	while(result.next())
+	
+	{
+     	t_array={};
+     	t_array.obs_name=&quot;HIV_DIAGNOSIS&quot;;
+     	t_array.obs_value_text=result.getString(&quot;test_result&quot;);
+     	test_date=result.getString(&quot;test_date&quot;);
+
+     	if(test_date)
+
+             {
+	             test_date = DateUtil.convertDate(&quot;yyyy-MM-dd&quot;, &quot;yyyyMMdd&quot;, test_date);
+                }
+                  else
+                     {
+	             
+	                 test_date=&quot;&quot;;
+	
+	                 }
+     	
+     	t_array.obs_datetime=test_date;
+
+
+
+     	$c(&apos;TArray&apos;).push(t_array);
+
+	}</script>
+        </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+          <name>ParsePID</name>
+          <sequenceNumber>13</sequenceNumber>
+          <script>//tmp[&apos;PID&apos;][&apos;PID.3&apos;][&apos;PID.3.1&apos;]=msg[&apos;pfile_ref&apos;].toString();
+//tmp[&apos;PID&apos;][&apos;PID.3&apos;][&apos;PID.3.5&apos;]=msg[&apos;pfile_ref_type&apos;].toString();
+
+//tmp[&apos;PID&apos;][&apos;PID.3&apos;][0][&apos;PID.3.1&apos;]=msg[&apos;pfile_ref&apos;].toString();
+//tmp[&apos;PID&apos;][&apos;PID.3&apos;][0][&apos;PID.3.5&apos;]=msg[&apos;pfile_ref_type&apos;].toString();
+
+//tmp[&apos;PID&apos;][&apos;PID.3&apos;][&apos;PID.3.1&apos;]=msg[&apos;pfile_ref&apos;].toString();
+tmp[&apos;PID&apos;][&apos;PID.1&apos;][&apos;PID.1.1&apos;]=$(&apos;system_id&apos;);
+//tmp[&apos;PID&apos;][&apos;PID.2&apos;][&apos;PID.2.1&apos;]=msg[&apos;hdss_id&apos;].toString();
+
+tmp[&apos;PID&apos;][&apos;PID.5&apos;][&apos;PID.5.1&apos;]=$(&apos;lastname&apos;);
+tmp[&apos;PID&apos;][&apos;PID.5&apos;][&apos;PID.5.2&apos;]=$(&apos;firstname&apos;);
+tmp[&apos;PID&apos;][&apos;PID.5&apos;][&apos;PID.5.3&apos;]=$(&apos;middlename&apos;);
+
+tmp[&apos;PID&apos;][&apos;PID.6&apos;][&apos;PID.6.2&apos;]=$(&apos;mother_firstname&apos;);
+tmp[&apos;PID&apos;][&apos;PID.6&apos;][&apos;PID.6.3&apos;]=$(&apos;mother_middlename&apos;);
+tmp[&apos;PID&apos;][&apos;PID.6&apos;][&apos;PID.6.1&apos;]=$(&apos;mother_lastname&apos;);
+tmp[&apos;PID&apos;][&apos;PID.8&apos;][&apos;PID.8.1&apos;]=$(&apos;gender&apos;);
+tmp[&apos;PID&apos;][&apos;PID.2&apos;][&apos;PID.2.1&apos;]=$(&apos;is_hdss&apos;);
+//tmp[&apos;PID&apos;][&apos;PID.2&apos;][&apos;PID.2.2&apos;]=$(&apos;hdss_id&apos;);
+//tmp[&apos;PID&apos;][&apos;PID.11&apos;][&apos;PID.11.11&apos;]=msg[&apos;village_name&apos;].toString();
+
+//residency start date
+tmp[&apos;PID&apos;][&apos;PID.26&apos;][&apos;PID.26.1&apos;]=$(&apos;residency_start_date&apos;);
+
+tmp[&apos;PID&apos;][&apos;PID.7&apos;][&apos;PID.7.1&apos;]=$(&apos;dob&apos;);
+	
+
+var mstatus_string_value=&quot;&quot;;
+if($(&apos;marital_status&apos;))
+{
+	var status_code=$(&apos;marital_status&apos;);
+	if(status_code==&apos;1&apos;){mstatus_string_value=&apos;NON RESPONSE&apos;;}
+	else if(status_code==&apos;2&apos;){mstatus_string_value=&apos;COHABITING&apos;;}
+	else if(status_code==&apos;3&apos;){mstatus_string_value=&apos;DIVORCED&apos;;}
+	else if(status_code==&apos;4&apos;){mstatus_string_value=&apos;MARRIED MONOGAMOUS&apos;;}
+	else if(status_code==&apos;5&apos;){mstatus_string_value=&apos;MARRIED POLYGAMOUS&apos;;}
+	else if(status_code==&apos;6&apos;){mstatus_string_value=&apos;REMARRIED&apos;;}
+	else if(status_code==&apos;7&apos;){mstatus_string_value=&apos;SEPERATED&apos;;}
+	else if(status_code==&apos;8&apos;){mstatus_string_value=&apos;SINGLE&apos;;}
+	else if(status_code==&apos;9&apos;){mstatus_string_value=&apos;WIDOWED&apos;;}
+	else if(status_code==&apos;10&apos;){mstatus_string_value=&apos;NON RESPONSE&apos;;}
+
+	
+}
+
+tmp[&apos;PID&apos;][&apos;PID.16&apos;][&apos;PID.16.1&apos;]=mstatus_string_value;
+
+//placed processed variables to Channel map
+
+$c(&apos;given_name&apos;,tmp[&apos;PID&apos;][&apos;PID.5&apos;][&apos;PID.5.2&apos;]);
+$c(&apos;middle_name&apos;,tmp[&apos;PID&apos;][&apos;PID.5&apos;][&apos;PID.5.3&apos;]);
+$c(&apos;family_name&apos;,tmp[&apos;PID&apos;][&apos;PID.5&apos;][&apos;PID.5.1&apos;]);
+$c(&apos;mother_firstname&apos;,tmp[&apos;PID&apos;][&apos;PID.6&apos;][&apos;PID.6.2&apos;]);
+$c(&apos;mother_middlename&apos;,tmp[&apos;PID&apos;][&apos;PID.6&apos;][&apos;PID.6.3&apos;]);
+$c(&apos;mother_lastname&apos;,tmp[&apos;PID&apos;][&apos;PID.6&apos;][&apos;PID.6.1&apos;]);
+$c(&apos;birthdate&apos;,tmp[&apos;PID&apos;][&apos;PID.7&apos;][&apos;PID.7.1&apos;]);
+$c(&apos;marital_status&apos;,tmp[&apos;PID&apos;][&apos;PID.16&apos;][&apos;PID.16.1&apos;]);
+$c(&apos;sex&apos;,tmp[&apos;PID&apos;][&apos;PID.8&apos;][&apos;PID.8.1&apos;]);
+
+//$c(&apos;pfile_ref&apos;,tmp[&apos;PID&apos;][&apos;PID.3&apos;][0][&apos;PID.3.1&apos;]);
+//$c(&apos;pfile_ref_type&apos;,tmp[&apos;PID&apos;][&apos;PID.3&apos;][0][&apos;PID.3.5&apos;]);
+$c(&apos;source_system_id&apos;,tmp[&apos;PID&apos;][&apos;PID.1&apos;][&apos;PID.1.1&apos;]);
+//$c(&apos;hdss_id&apos;,tmp[&apos;PID&apos;][&apos;PID.2&apos;][&apos;PID.2.1&apos;]);
+
+tmp[&apos;PID&apos;][&apos;PID.31&apos;][&apos;PID.31.1&apos;]=$(&apos;date_modified&apos;);
+
+//now adding identifiers
+var single_identifier = &apos;&apos;;
+
+var source_system_id=$(&apos;system_id&apos;);
+
+single_identifier += &apos;SOURCE_MACHINE_ID^^^^&apos; +source_system_id;
+
+single_identifier += &apos;~&apos;;
+
+function addPID(IdType,IDValue,IDCreateDate,IDModifiedDate){
+		single_identifier += IdType + &apos;^^^^&apos; +IDValue+&apos;^&apos;+IDCreateDate+&apos;^&apos;+IDModifiedDate;
+		
+}
+
+
+if($(&apos;Identifiers&apos;)){
+	for each(pid in $(&apos;Identifiers&apos;)){
+		addPID(pid.identifier_type.toString().toUpperCase(), pid.identifier_value.toString(),pid.date_created,pid.modified_at);
+		single_identifier += &apos;~&apos;;	
+	}
+}
+
+tmp[&apos;PID&apos;][&apos;PID.3&apos;] = single_identifier;
+
+
+
+//now adding the location parameters
+
+
+var single_location = &apos;&apos;;
+
+function addLocation(LocationType,LocationValue){
+		single_location += &apos;^^^^^^&apos;+LocationType + &apos;^^^^&apos; +LocationValue;
+		
+}
+
+if($(&apos;Location&apos;)){
+	for each(lid in $(&apos;Location&apos;)){
+
+		addLocation(lid.location_type.toString().toUpperCase(), lid.location_value.toString().toUpperCase());
+		single_location += &apos;~&apos;;
+			
+	}
+}
+
+tmp[&apos;PID&apos;][&apos;PID.11&apos;] = single_location;</script>
+        </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+          <name>ParseNK1</name>
+          <sequenceNumber>14</sequenceNumber>
+          <script>tmp[&apos;NK1&apos;][0][&apos;NK1.2&apos;][&apos;NK1.2.2&apos;]=channelMap.get(&apos;father_firstname&apos;);
+
+tmp[&apos;NK1&apos;][0][&apos;NK1.2&apos;][&apos;NK1.2.3&apos;]=channelMap.get(&apos;father_middlename&apos;);
+
+tmp[&apos;NK1&apos;][0][&apos;NK1.2&apos;][&apos;NK1.2.1&apos;]=channelMap.get(&apos;father_lastname&apos;);
+
+
+tmp[&apos;NK1&apos;][1][&apos;NK1.2&apos;][&apos;NK1.2.2&apos;]=channelMap.get(&apos;compound_firstname&apos;);
+
+tmp[&apos;NK1&apos;][1][&apos;NK1.2&apos;][&apos;NK1.2.3&apos;]=channelMap.get(&apos;compound_middlename&apos;);
+
+tmp[&apos;NK1&apos;][1][&apos;NK1.2&apos;][&apos;NK1.2.1&apos;]=channelMap.get(&apos;compound_lastname&apos;);;</script>
+        </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+          <name>modified_at</name>
+          <sequenceNumber>15</sequenceNumber>
+          <script>var modified_at = msg[&apos;modified_at&apos;].toString();
+
+$c(&apos;modified_at&apos;,modified_at);</script>
+        </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+          <name>ParsePV1</name>
+          <sequenceNumber>16</sequenceNumber>
+          <script>tmp[&apos;PV1&apos;][&apos;PV1.44&apos;][&apos;PV1.44.1&apos;]=channelMap.get(&apos;visit_date&apos;);
+
+tmp[&apos;PV1&apos;][&apos;PV1.35&apos;][&apos;PV1.35.1&apos;]=$(&apos;modified_at&apos;);
+
+
+//get the CCC visit with a sent_flag of 0 and corresponding with a</script>
+        </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+          <name>ANCVisitDatetoCCCVisitIDMapper</name>
+          <sequenceNumber>17</sequenceNumber>
+          <script>var ccc_visit_id;
+
+try 
+
+{
+		
+     var Query = &quot;EXEC Map_ANCVisitDate_to_CCCVisitID &apos;&quot;+ msg[&apos;system_id&apos;].toString() +&quot;&apos;,&apos;&quot;+ msg[&apos;visit_date&apos;].toString() +&quot;&apos;&quot;;
+		
+			
+var result = HISSgetDbConn().executeCachedQuery(Query);	
+
+	while(result.next())
+	
+	{
+     	ccc_visit_id=result.getString(&quot;ccc_visit_id&quot;);
+
+     	$c(&apos;ccc_visit_id&apos;,ccc_visit_id);     	
+     	
+	}
+	
+} 
+
+finally {
+	if (HISSgetDbConn()) { 
+		HISSgetDbConn().close();
+	}
+}</script>
+        </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+          <name>CCCInformation</name>
+          <sequenceNumber>18</sequenceNumber>
+          <script>/*
+
+$c(&apos;CCCInfo&apos;,[]);
+
+
+try {
+	
+var Query = &quot;EXEC retrieve_ccc_info &apos;&quot;+ msg[&apos;system_id&apos;].toString() +&quot;&apos;&quot;;
+
+var result = HISSgetDbConn().executeCachedQuery(Query);
+
+while(result.next())
+{
+                    
+           var art_startyear=result.getString(&quot;art_startyear&quot;);
+           var art_startmonth=result.getString(&quot;art_startmonth&quot;);
+           var art_startday=result.getString(&quot;art_startday&quot;);
+           var hiv_positive_date=result.getString(&quot;hiv_positive_date&quot;);
+           var cd4_name=result.getString(&quot;cd4test_name&quot;);
+           var cd4_value=result.getString(&quot;cd4_value&quot;);
+           var cd4_year=result.getString(&quot;cd4_year&quot;);
+           var cd4_month=result.getString(&quot;cd4_month&quot;);
+           var cd4_day=result.getString(&quot;cd4_day&quot;);
+           var cd4_created_at=result.getString(&quot;cd4_created_at&quot;);
+           var viralload_name=result.getString(&quot;VLtest_name&quot;);
+           var viralload_value=result.getString(&quot;viralload_value&quot;);
+           var viralload_year=result.getString(&quot;viralload_year&quot;);
+           var viralload_month=result.getString(&quot;viralload_month&quot;);
+           var viralload_day=result.getString(&quot;viralload_day&quot;);
+           var viralload_created_at=result.getString(&quot;viralload_created_at&quot;);
+           var first_visit_type=result.getString(&quot;first_visit_type&quot;);
+           var most_recent_visit_year=result.getString(&quot;most_recent_visit_year&quot;);
+           var most_recent_visit_month=result.getString(&quot;most_recent_visit_month&quot;);
+           var most_recent_visit_day=result.getString(&quot;most_recent_visit_day&quot;);
+           var most_recent_visit_createdate=result.getString(&quot;most_recent_visit_createdate&quot;);
+           var second_visit_type=result.getString(&quot;second_visit_type&quot;);
+           var second_mostrecent_visit_year=result.getString(&quot;second_mostrecent_visit_year&quot;);
+           var second_mostrecent_visit_month=result.getString(&quot;second_mostrecent_visit_month&quot;);
+           var second_mostrecent_visit_day=result.getString(&quot;second_mostrecent_visit_day&quot;);
+           var second_mostrecent_visit_createdate=result.getString(&quot;second_mostrecent_visit_createdate&quot;);
+           var regimen_name=result.getString(&quot;regimen_name&quot;);
+           var regimen_create_date=result.getString(&quot;regimen_create_date&quot;);
+           var adherence_category=result.getString(&quot;adherence_category&quot;);
+           var why_adherence_fairpoor=result.getString(&quot;why_adherence_fairpoor&quot;);
+           var adherence_info_createdate=result.getString(&quot;adherence_info_createdate&quot;);
+          
+           
+     	  	
+     	     
+        
+         if(cd4_value != null &amp;&amp; cd4_value !=&apos;&apos;)
+          {
+
+          	var o_array={};
+          	o_array.obs_name=cd4_name;
+          	o_array.obs_value=cd4_value;
+          	o_array.obs_datetime=cd4_year+&quot;-&quot;+cd4_month+&quot;-&quot;+cd4_month;
+
+          	$c(&apos;CCCInfo&apos;).push(o_array);
+          	
+          }
+		  
+		  
+		  if(viralload_value != null &amp;&amp; viralload_value !=&apos;&apos;)
+          {
+
+          	var o_array={};
+          	o_array.obs_name=viralload_name;
+          	o_array.obs_value=viralload_value;
+          	o_array.obs_datetime=viralload_year+&quot;-&quot;+viralload_month+&quot;-&quot;+viralload_day;
+
+          	$c(&apos;CCCInfo&apos;).push(o_array);
+          	
+          }
+
+
+           if(hiv_positive_date != null &amp;&amp; hiv_positive_date !=&apos;&apos;)
+          {
+
+          	//review this portion
+          	var o_array={};
+          	o_array.obs_name=&quot;HIV_DIAGNOSIS&quot;;
+          	o_array.obs_value=&quot;POSITIVE&quot;;
+          	//var datestring = DateUtil.convertDate(inpattern, outpattern, date);
+          	o_array.obs_datetime=hiv_positive_date;
+
+          	$c(&apos;CCCInfo&apos;).push(o_array);
+          	
+          }
+
+
+          if(art_startyear &amp;&amp; art_startmonth &amp;&amp; art_startday)
+          {
+
+          	var o_array={};
+          	o_array.obs_name=&quot;ART_START_DATE&quot;;
+          	o_array.obs_value=art_startyear+&quot;-&quot;+art_startmonth+&quot;-&quot;+art_startday;
+          	o_array.obs_datetime=art_startyear+&quot;-&quot;+art_startmonth+&quot;-&quot;+art_startday;
+
+          	$c(&apos;CCCInfo&apos;).push(o_array);
+          	
+          }
+
+
+          if(regimen_name != null &amp;&amp; regimen_name !=&apos;&apos;)
+          {
+
+          	var o_array={};
+          	o_array.obs_name=&quot;ART_REGIMEN&quot;;
+          	o_array.obs_value=regimen_name;
+          	o_array.obs_datetime=regimen_create_date;
+
+          	$c(&apos;CCCInfo&apos;).push(o_array);
+          	
+          }
+
+          if(adherence_category != null &amp;&amp; adherence_category !=&apos;&apos;)
+          {
+
+          	var o_array={};
+          	o_array.obs_name=&quot;ART_ADHERENCE_CATEGORY&quot;;
+          	o_array.obs_value=adherence_category;
+          	o_array.obs_datetime=adherence_info_createdate;
+
+          	$c(&apos;CCCInfo&apos;).push(o_array);
+          	
+          }
+
+
+
+          if(why_adherence_fairpoor != null &amp;&amp; why_adherence_fairpoor !=&apos;&apos;)
+          {
+
+          	var o_array={};
+          	o_array.obs_name=&quot;POORFAIR_ADHERENCE_REASON&quot;;
+          	o_array.obs_value=why_adherence_fairpoor;
+          	o_array.obs_datetime=adherence_info_createdate;
+
+          	$c(&apos;CCCInfo&apos;).push(o_array);
+          	
+          }
+
+
+          if(most_recent_visit_year &amp;&amp; most_recent_visit_month &amp;&amp; most_recent_visit_day)
+          {
+
+          	var o_array={};
+          	o_array.obs_name=&quot;MOST_RECENT_CCC_VISIT&quot;;
+          	o_array.obs_value=most_recent_visit_year+&quot;-&quot;+most_recent_visit_month+&quot;-&quot;+most_recent_visit_day;
+          	o_array.obs_datetime=most_recent_visit_createdate;
+
+          	$c(&apos;CCCInfo&apos;).push(o_array);
+          	
+          }
+		  
+		  
+		  
+		  
+		  if(second_mostrecent_visit_year &amp;&amp; second_mostrecent_visit_month &amp;&amp; second_mostrecent_visit_day)
+          {
+
+          	var o_array={};
+          	o_array.obs_name=&quot;SECOND_MOST_RECENT_CCC_VISIT&quot;;
+          	o_array.obs_value=second_mostrecent_visit_year+&quot;-&quot;+second_mostrecent_visit_month+&quot;-&quot;+second_mostrecent_visit_day;
+          	o_array.obs_datetime=second_mostrecent_visit_createdate;
+
+          	$c(&apos;CCCInfo&apos;).push(o_array);
+          	
+          }
+     	
+     	
+     
+     	
+
+} 
+} finally {
+	if (HISSgetDbConn()) { 
+		HISSgetDbConn().close();
+	}
+}
+
+*/</script>
+        </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+          <name>CCCInfo</name>
+          <sequenceNumber>19</sequenceNumber>
+          <script>$c(&apos;CCCInfo&apos;,[]);
+
+//currently extracting baseline CCC variables
+
+try {
+	
+var Query = &quot;EXEC ccctab_getbaseline &apos;&quot;+ msg[&apos;system_id&apos;].toString() +&quot;&apos;&quot;;
+
+var result = HISSgetDbConn().executeCachedQuery(Query);
+
+while(result.next())
+{
+                    
+           var art_startyear=result.getString(&quot;art_startyear&quot;);
+           var art_startmonth=result.getString(&quot;art_startmonth&quot;);
+           var art_startday=result.getString(&quot;art_startday&quot;);
+           var hiv_positive_date=result.getString(&quot;hiv_positive_date&quot;);
+                    
+          	
+     	     
+          if(hiv_positive_date != null &amp;&amp; hiv_positive_date !=&apos;&apos;)
+          {
+
+          	//review this portion
+          	var o_array={};
+          	o_array.obs_name=&quot;HIV_DIAGNOSIS&quot;;
+          	o_array.obs_value=&quot;POSITIVE&quot;;
+          	//var datestring = DateUtil.convertDate(inpattern, outpattern, date);
+          	o_array.obs_datetime=hiv_positive_date;
+
+          	$c(&apos;CCCInfo&apos;).push(o_array);
+          	
+          }
+
+
+          if(art_startyear &amp;&amp; art_startmonth &amp;&amp; art_startday)
+          {
+
+          	var o_array={};
+          	o_array.obs_name=&quot;ART_START_DATE&quot;;
+          	o_array.obs_value=art_startyear+&quot;-&quot;+art_startmonth+&quot;-&quot;+art_startday;
+          	o_array.obs_datetime=art_startyear+&quot;-&quot;+art_startmonth+&quot;-&quot;+art_startday;
+
+          	$c(&apos;CCCInfo&apos;).push(o_array);
+          	
+          }
+
+
+}    
+       	
+     	
+     
+  
+} finally {
+	if (HISSgetDbConn()) { 
+		HISSgetDbConn().close();
+	}
+}
+
+
+
+//now extracting other CCC variables
+try {
+	
+var Query = &quot;EXEC ccctab_retrieve_ccc_info &apos;&quot;+ msg[&apos;system_id&apos;].toString() +&quot;&apos;, &apos;&quot;+$(&apos;ccc_visit_id&apos;)+&quot;&apos;&quot;;
+
+var result = HISSgetDbConn().executeCachedQuery(Query);
+
+while(result.next())
+{
+           var ccc_visit_date=result.getString(&quot;CCC_visit_date&quot;);         
+           var cd4_name=result.getString(&quot;cd4test_name&quot;);
+           var cd4_value=result.getString(&quot;cd4_value&quot;);
+           var cd4_year=result.getString(&quot;cd4_year&quot;);
+           var cd4_month=result.getString(&quot;cd4_month&quot;);
+           var cd4_day=result.getString(&quot;cd4_day&quot;);
+           var cd4_created_at=result.getString(&quot;cd4_created_at&quot;);
+           var viralload_name=result.getString(&quot;VLtest_name&quot;);
+           var viralload_value=result.getString(&quot;viralload_value&quot;);
+           var viralload_year=result.getString(&quot;viralload_year&quot;);
+           var viralload_month=result.getString(&quot;viralload_month&quot;);
+           var viralload_day=result.getString(&quot;viralload_day&quot;);
+           var viralload_created_at=result.getString(&quot;viralload_created_at&quot;);
+           var regimen_name=result.getString(&quot;regimen_name&quot;);
+           var regimen_create_date=result.getString(&quot;regimen_create_date&quot;);
+           var adherence_category=result.getString(&quot;adherence_category&quot;);
+           var why_adherence_fairpoor=result.getString(&quot;why_adherence_fairpoor&quot;);
+           var adherence_info_createdate=result.getString(&quot;adherence_info_createdate&quot;);    
+           var CCC_associated_anc_date=result.getString(&quot;CCC_associated_anc_date&quot;);                  
+            	  	
+     	     
+        
+        
+           if(ccc_visit_date != null &amp;&amp; ccc_visit_date !=&apos;&apos;)
+          {
+
+          	var o_array={};
+          	o_array.obs_name=&quot;CCC_VISIT_DATE&quot;;
+          	o_array.obs_value=ccc_visit_date;
+          	o_array.obs_datetime=ccc_visit_date;
+
+          	$c(&apos;CCCInfo&apos;).push(o_array);
+          	
+          }
+
+           if(CCC_associated_anc_date != null &amp;&amp; CCC_associated_anc_date !=&apos;&apos;)
+          {
+
+          	var o_array={};
+          	o_array.obs_name=&quot;ASSOCIATED_ANC_VISIT_DATE&quot;;
+          	o_array.obs_value=CCC_associated_anc_date;
+          	o_array.obs_datetime=ccc_visit_date;
+
+          	$c(&apos;CCCInfo&apos;).push(o_array);
+          	
+          }
+
+           if(cd4_value != null &amp;&amp; cd4_value !=&apos;&apos;)
+          {
+
+          	var o_array={};
+          	o_array.obs_name=cd4_name;
+          	o_array.obs_value=cd4_value;
+          	o_array.obs_datetime=cd4_year+&quot;-&quot;+cd4_month+&quot;-&quot;+cd4_month;
+
+          	$c(&apos;CCCInfo&apos;).push(o_array);
+          	
+          }
+		  
+		  
+		  if(viralload_value != null &amp;&amp; viralload_value !=&apos;&apos;)
+          {
+
+          	var o_array={};
+          	o_array.obs_name=viralload_name;
+          	o_array.obs_value=viralload_value;
+          	o_array.obs_datetime=viralload_year+&quot;-&quot;+viralload_month+&quot;-&quot;+viralload_day;
+
+          	$c(&apos;CCCInfo&apos;).push(o_array);
+          	
+          }
+
+
+          if(regimen_name != null &amp;&amp; regimen_name !=&apos;&apos;)
+          {
+
+          	var o_array={};
+          	o_array.obs_name=&quot;ART_REGIMEN&quot;;
+          	o_array.obs_value=regimen_name;
+          	o_array.obs_datetime=regimen_create_date;
+
+          	$c(&apos;CCCInfo&apos;).push(o_array);
+          	
+          }
+
+           if(adherence_category != null &amp;&amp; adherence_category !=&apos;&apos;)
+          {
+
+          	var o_array={};
+          	o_array.obs_name=&quot;ART_ADHERENCE_CATEGORY&quot;;
+          	o_array.obs_value=adherence_category;
+          	o_array.obs_datetime=adherence_info_createdate;
+
+          	$c(&apos;CCCInfo&apos;).push(o_array);
+          	
+          }
+
+
+
+          if(why_adherence_fairpoor != null &amp;&amp; why_adherence_fairpoor !=&apos;&apos;)
+          {
+
+          	var o_array={};
+          	o_array.obs_name=&quot;POORFAIR_ADHERENCE_REASON&quot;;
+          	o_array.obs_value=why_adherence_fairpoor;
+          	o_array.obs_datetime=adherence_info_createdate;
+
+          	$c(&apos;CCCInfo&apos;).push(o_array);
+          	
+          }
+
+
+
+          
+
+
+}    
+       	
+     	
+     
+  
+} finally {
+	if (HISSgetDbConn()) { 
+		HISSgetDbConn().close();
+	}
+}</script>
+        </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+          <name>MetaInformation</name>
+          <sequenceNumber>20</sequenceNumber>
+          <script>//now retrieving the metadata objects
+
+var meta_obj = {};
+
+try 
+
+{
+		
+     var  Query = &quot;SELECT system_id,&quot;;
+	Query += &quot;[ANC_study_id],[ANC_name],ANC_village,&quot;;
+	Query += &quot;[counselled_as_couple],[partner_test_result],[ANC_ccc_number],[ANC_village],&quot;;
+	Query += &quot;[first_hiv_test] as first_ANC_hiv_test,[second_hiv_test] as second_ANC_hiv_test,&quot;;
+	Query += &quot;[anc_birth_day],[anc_birth_month],[anc_birth_year],&quot;;
+	Query += &quot;[first_negative_test_date],[sample_actually_drawn],[created_at]&quot;;
+	Query += &quot;from [Anc].[person_metadata] where system_id=&apos;&quot;+$(&apos;system_id&apos;)+&quot;&apos; and anc_visit_id= &apos;&quot;+ msg[&apos;anc_visit_id&apos;].toString() +&quot;&apos;;&quot;;
+		
+	
+		
+var result = HISSgetDbConn().executeCachedQuery(Query);	
+
+	while(result.next())
+	
+	{
+     	meta_obj.ANC_study_id=result.getString(&quot;ANC_study_id&quot;);
+     	meta_obj.village_in_ANC_form=result.getString(&quot;ANC_village&quot;);
+     	meta_obj.name_in_ANC_form=result.getString(&quot;ANC_name&quot;);
+     	meta_obj.counselled_as_couple=result.getString(&quot;counselled_as_couple&quot;);
+     	meta_obj.partner_test_result=result.getString(&quot;partner_test_result&quot;);
+     	meta_obj.ANC_ccc_number=result.getString(&quot;ANC_ccc_number&quot;);
+     	meta_obj.first_ANC_hiv_test=result.getString(&quot;first_ANC_hiv_test&quot;);
+		meta_obj.second_ANC_hiv_test=result.getString(&quot;second_ANC_hiv_test&quot;);
+		meta_obj.first_negative_test_date=result.getString(&quot;first_negative_test_date&quot;);
+		meta_obj.sample_actually_drawn=result.getString(&quot;sample_actually_drawn&quot;);
+		meta_obj.anc_birth_day=result.getString(&quot;anc_birth_day&quot;);
+		meta_obj.anc_birth_month=result.getString(&quot;anc_birth_month&quot;);
+		meta_obj.anc_birth_year=result.getString(&quot;anc_birth_year&quot;);
+     	
+	}
+	
+} 
+
+finally {
+	if (HISSgetDbConn()) { 
+		HISSgetDbConn().close();
+	}
+}
+
+
+
+$c(&apos;meta_obj&apos;, meta_obj);
+
+
+
+
+//now finding the criteria used to match a client
+$c(&apos;Identifiers&apos;,[]);
+
+
+try {
+	
+
+var Query = &quot;select search_criteria,date_matched&quot;;
+    Query += &quot; from [registry].[person_match] where HDSS_ID IS NOT NULL and HDSS_ID !=&apos;&apos; and system_id IS NOT NULL and system_id= &apos;&quot;+ msg[&apos;system_id&apos;].toString() +&quot;&apos;;&quot;;
+
+var result = HISSgetDbConn().executeCachedQuery(Query);
+
+while(result.next())
+{
+                    
+          var search_criteria=result.getString(&quot;search_criteria&quot;);
+          var date_matched=result.getString(&quot;date_matched&quot;);
+           
+     	  	
+     	     
+ $c(&apos;search_criteria&apos;,search_criteria);	
+  $c(&apos;date_matched&apos;,date_matched);    	
+     
+
+} 
+} finally {
+	if (HISSgetDbConn()) { 
+		HISSgetDbConn().close();
+	}
+}</script>
+        </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+          <name>HDSS Search Logs</name>
+          <sequenceNumber>21</sequenceNumber>
+          <script>var search_date=&quot;&quot;;
+
+$c(&apos;HDSSLogArray&apos;,[]);
+
+
+var  Query = &quot;SELECT distinct search_parameters,created_at,involved_user &quot;;
+Query += &quot;from registry.hdss_search_log where system_id IS NOT NULL and system_id !=&apos;&apos; and system_id= &apos;&quot;+ msg[&apos;system_id&apos;].toString() +&quot;&apos;;&quot;;
+
+
+var result = HISSgetDbConn().executeCachedQuery(Query);	
+
+
+
+	//return result;
+
+
+	while(result.next())
+	
+	{
+     	search_log_array={};
+     	search_log_array.obs_name=&quot;HDSS_SEARCH_LOG&quot;;
+
+          var clob = result.getClob(&quot;search_parameters&quot;);
+          var search_attempts = clob.getSubString(1,clob.length());
+            	
+     	search_log_array.obs_value_text=search_attempts;
+     	search_date=result.getString(&quot;created_at&quot;);
+
+     	if(search_date)
+
+             {
+	             search_date = DateUtil.convertDate(&quot;yyyy-MM-dd&quot;, &quot;yyyyMMdd&quot;, search_date);
+                }
+                  else
+                     {
+	             
+	                 search_date=&quot;&quot;;
+	
+	                 }
+     	
+     	search_log_array.obs_datetime=search_date;
+
+
+
+     	$c(&apos;HDSSLogArray&apos;).push(search_log_array);
+
+	}</script>
+        </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+          <name>Patient Remarks</name>
+          <sequenceNumber>22</sequenceNumber>
+          <script>var remark_date=&quot;&quot;;
+
+$c(&apos;PatientRemarks&apos;,[]);
+
+
+var  Query = &quot;SELECT distinct remarks,created_at &quot;;
+Query += &quot;from registry.person_remarks where system_id IS NOT NULL and system_id !=&apos;&apos; and system_id= &apos;&quot;+ msg[&apos;system_id&apos;].toString() +&quot;&apos;;&quot;;
+
+
+var result = HISSgetDbConn().executeCachedQuery(Query);	
+
+
+
+	//return result;
+
+
+	while(result.next())
+	
+	{
+     	remark_array={};
+     	remark_array.obs_name=&quot;PATIENT_REMARKS&quot;;
+     	
+          var clob = result.getClob(&quot;remarks&quot;);
+          var client_remarks = clob.getSubString(1,clob.length());
+     	
+     	remark_array.obs_value_text=client_remarks;
+     	remark_date=result.getString(&quot;created_at&quot;);
+
+     	if(remark_date)
+
+             {
+	             remark_date = DateUtil.convertDate(&quot;yyyy-MM-dd&quot;, &quot;yyyyMMdd&quot;, remark_date);
+                }
+                  else
+                     {
+	             
+	                 remark_date=&quot;&quot;;
+	
+	                 }
+     	
+     	remark_array.obs_datetime=remark_date;
+
+
+
+     	$c(&apos;PatientRemarks&apos;).push(remark_array);
+
+	}</script>
+        </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+          <name>Interviews</name>
+          <sequenceNumber>23</sequenceNumber>
+          <script>var interview_date=&quot;&quot;;
+
+$c(&apos;RegistryInterviews&apos;,[]);
+
+var  Query = &quot;SELECT top 1 start_time,end_time,date_created &quot;;
+Query += &quot;from registry.interviews where system_id IS NOT NULL and system_id !=&apos;&apos; and system_id= &apos;&quot;+ msg[&apos;system_id&apos;].toString() +&quot;&apos;;&quot;;
+
+
+var result = HISSgetDbConn().executeCachedQuery(Query);	
+
+
+
+	//return result;
+
+
+	while(result.next())
+	
+	{
+     	interview_array={};
+     	interview_array.obs_name=&quot;REGISTRY_INTERVIEWS&quot;;
+     	//interview_array.obs_value_text=result.getString(&quot;remarks&quot;);
+
+          var start_time=result.getString(&quot;start_time&quot;);
+          var end_time=result.getString(&quot;end_time&quot;);
+
+          interview_array.obs_value_text=start_time + &quot; to &quot; +end_time;
+     	
+     	interview_date=result.getString(&quot;date_created&quot;);
+
+     	if(interview_date)
+
+             {
+	             interview_date = DateUtil.convertDate(&quot;yyyy-MM-dd&quot;, &quot;yyyyMMdd&quot;, interview_date);
+                }
+                  else
+                     {
+	             
+	                 interview_date=&quot;&quot;;
+	
+	                 }
+     	
+     	interview_array.obs_datetime=interview_date;
+
+
+
+     	$c(&apos;RegistryInterviews&apos;).push(interview_array);
+
+	}</script>
+        </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+          <name>ParseOBXandVitals</name>
+          <sequenceNumber>24</sequenceNumber>
+          <script>var setId = 0;
+var obx = tmp[&apos;OBX&apos;];
+
+//this is a function to dynamically add observations
+function addObx(setId, obsName, value, obsDateTime){
+	tmp[&apos;OBX&apos;][setId] = obx;
+	tmp[&apos;OBX&apos;][setId][&apos;OBX.1&apos;][&apos;OBX.1.1&apos;] = setId + 1;
+	tmp[&apos;OBX&apos;][setId][&apos;OBX.2&apos;][&apos;OBX.2.1&apos;] = &apos;ST&apos;;
+	tmp[&apos;OBX&apos;][setId][&apos;OBX.3&apos;][&apos;OBX.3.2&apos;] = obsName;
+	tmp[&apos;OBX&apos;][setId][&apos;OBX.5&apos;][&apos;OBX.5.1&apos;] = value; 
+	tmp[&apos;OBX&apos;][setId][&apos;OBX.11&apos;][&apos;OBX.11.1&apos;] = &apos;F&apos;;
+	tmp[&apos;OBX&apos;][setId][&apos;OBX.14&apos;][&apos;OBX.14.1&apos;] = obsDateTime;
+}
+
+
+
+var obx_obj = $(&apos;obx_obj&apos;);
+
+
+if(obx_obj){
+	for(prop in obx_obj){
+		var obsName = prop.toString().toUpperCase();
+		var obsValue = &apos;&apos;;
+		if(obx_obj[prop] != null &amp;&amp; obx_obj[prop] != &apos;&apos;)
+		{
+			obsValue = obx_obj[prop].toString().toUpperCase();
+		}
+
+		else 
+		{
+			obsValue=&quot;ND&quot;;
+			
+			}
+
+
+             //generate an OBX segement only if there is an observation value defined for the observation object in question
+              if(obsValue)
+
+                  {
+		        addObx(setId, obsName, obsValue, $(&apos;visit_date&apos;));
+		        setId++;
+                  }
+	}
+}
+
+
+//now adding values in the vitals table to the OBX segment
+
+var vital_obj = $(&apos;vital_obj&apos;);
+
+
+if(vital_obj){
+	for(prop in vital_obj){
+		var obsName = prop.toString().toUpperCase();
+		var obsValue = &apos;&apos;;
+		if(vital_obj[prop])
+			obsValue = vital_obj[prop].toString().toUpperCase();
+
+		addObx(setId, obsName, obsValue, $(&apos;visit_date&apos;));
+		setId++;
+	}
+}
+
+
+
+var treatment_obj = $(&apos;treatment_obj&apos;);
+if(treatment_obj){
+	for(prop in treatment_obj){
+		var obsName = prop.toString().toUpperCase();
+		var obsValue = &apos;&apos;;
+		if(treatment_obj[prop])
+			obsValue = treatment_obj[prop].toUpperCase();
+
+		addObx(setId, obsName, obsValue, $(&apos;visit_date&apos;));
+		setId++;
+	}
+}
+
+
+
+//adding doses given to the OBX segment
+var drug_obj = $(&apos;drug_obj&apos;);
+if(drug_obj){
+	for(prop in drug_obj){
+		var obsName = prop.toString().toUpperCase();
+		var obsValue = &apos;&apos;;
+		if(drug_obj[prop])
+			obsValue = drug_obj[prop].toUpperCase();
+		addObx(setId, obsName, obsValue, $(&apos;visit_date&apos;));
+		setId++;
+	}
+}
+
+
+
+
+
+
+if($(&apos;O_Conditions&apos;)){
+	for each(recordedEvent in $(&apos;O_Conditions&apos;)){
+		addObx(setId, recordedEvent.condition_name.toString().toUpperCase(), recordedEvent.condition_value, $(&apos;visit_date&apos;));
+		setId++;	
+	}
+}
+
+//consent value
+
+if($(&apos;Consent_A&apos;)){
+	for each(recordedEvent in $(&apos;Consent_A&apos;)){
+		addObx(setId, recordedEvent.consent_type.toString().toUpperCase(), recordedEvent.consent_value.toString(), recordedEvent.date_consented.toString());
+		setId++;	
+	}
+}
+
+//add pregnancy value to the OBX segment
+if($(&apos;Pregnancy_A&apos;)){
+	for each(recordedEvent in $(&apos;Pregnancy_A&apos;)){
+		addObx(setId, recordedEvent.event_name.toString().toUpperCase(), recordedEvent.pregnancy_value.toString(), recordedEvent.pregnancy_date.toString());
+		setId++;	
+	}
+}
+
+
+
+//add ANC visibility
+
+if($(&apos;ANC_A&apos;)){
+	for each(recordedEvent in $(&apos;ANC_A&apos;)){
+		addObx(setId, recordedEvent.availability_name.toString().toUpperCase(), recordedEvent.availability_value.toString(), recordedEvent.availability_date.toString());
+		setId++;	
+	}
+}
+
+//CCC availability
+if($(&apos;CCC_A&apos;)){
+	for each(recordedEvent in $(&apos;CCC_A&apos;)){
+		addObx(setId, recordedEvent.availability_name.toString().toUpperCase(), recordedEvent.availability_value.toString(), recordedEvent.availability_date.toString());
+		setId++;	
+	}
+}
+
+
+
+if($(&apos;O_Treatment&apos;)){
+	for each(recordedEvent in $(&apos;O_Treatment&apos;)){
+		addObx(setId, recordedEvent.treatment_name, recordedEvent.treatment_value, $(&apos;visit_date&apos;));
+		//addObx(setId, recordedEvent.treatment_name != &quot;&quot; ? recordedEvent.treatment_name.toString().toUpperCase() : recordedEvent.treatment_name, recordedEvent.treatment_value, $(&apos;visit_date&apos;));
+		setId++;	
+	}
+}
+
+//add the CCC related information to the OBX segment
+
+if($(&apos;CCCInfo&apos;)){
+	for each(recordedEvent in $(&apos;CCCInfo&apos;)){
+
+		if(recordedEvent.obs_value != null &amp;&amp; recordedEvent.obs_datetime != null)
+		{
+		addObx(setId, recordedEvent.obs_name.toString(), recordedEvent.obs_value.toString(), recordedEvent.obs_datetime.toString());
+		setId++;
+		}	
+	}
+}
+
+
+
+
+
+//now adding the meta objects to the Channel
+
+var meta_obj = $(&apos;meta_obj&apos;);
+
+
+if(meta_obj){
+	for(prop in meta_obj){
+		var obsName = prop.toString().toUpperCase();
+		var obsValue = &apos;&apos;;
+		if(meta_obj[prop])
+			obsValue = meta_obj[prop].toString().toUpperCase();
+
+		addObx(setId, obsName, obsValue, $(&apos;visit_date&apos;));
+		setId++;
+	}
+}
+
+
+
+// add the HDSS match criteria to the OBX segment
+
+if($(&apos;search_criteria&apos;)){
+	 addObx(setId, &quot;HDSS_LINKAGE_CRITERIA&quot;, $(&apos;search_criteria&apos;).toString(), $(&apos;date_matched&apos;));
+      setId++;	
+	
+}
+
+//add pregnancy value to the obx segment
+/*
+if($(&apos;pregnancy_value&apos;)){
+	 addObx(setId, &quot;PREGNANCY&quot;, $(&apos;pregnancy_value&apos;).toString(), $(&apos;pregnancy_date&apos;));
+      setId++;	
+	
+}
+
+*/
+
+
+
+//now adding HIV testinfo to the OBX segment
+
+
+if($(&apos;Sero_Test&apos;)){
+	for each(recordedEvent in $(&apos;Sero_Test&apos;)){
+		addObx(setId, recordedEvent.test_type.toString().toUpperCase(), recordedEvent.test_value.toString(), recordedEvent.test_date.toString());
+		setId++;	
+	}
+}
+
+
+
+//add final HIV test result to the OBX segment
+
+if($(&apos;TArray&apos;)){
+	for each(recordedEvent in $(&apos;TArray&apos;)){
+		addObx(setId, recordedEvent.obs_name.toString(), recordedEvent.obs_value_text.toString(), recordedEvent.obs_datetime.toString());
+		setId++;	
+	}
+}
+
+
+if($(&apos;HDSSLogArray&apos;)){
+	for each(recordedEvent in $(&apos;HDSSLogArray&apos;)){
+
+     if(recordedEvent.obs_value_text != null &amp;&amp; recordedEvent.obs_datetime != null)
+		{
+		
+		addObx(setId, recordedEvent.obs_name.toString(), recordedEvent.obs_value_text.toString(), recordedEvent.obs_datetime.toString());
+		setId++;	
+
+		}
+	}
+}
+
+
+if($(&apos;PatientRemarks&apos;)){
+	for each(recordedEvent in $(&apos;PatientRemarks&apos;)){
+
+        if(recordedEvent.obs_value_text != null &amp;&amp; recordedEvent.obs_datetime != null)
+		{ 
+		
+		addObx(setId, recordedEvent.obs_name.toString(), recordedEvent.obs_value_text.toString(), recordedEvent.obs_datetime.toString());
+		setId++;	
+
+		}
+	}
+}
+
+if($(&apos;RegistryInterviews&apos;)){
+	for each(recordedEvent in $(&apos;RegistryInterviews&apos;)){
+
+		if(recordedEvent.obs_value_text != null &amp;&amp; recordedEvent.obs_datetime != null)
+		{
+		addObx(setId, recordedEvent.obs_name.toString(), recordedEvent.obs_value_text.toString(), recordedEvent.obs_datetime.toString());
+		setId++;
+		}	
+	}
+}</script>
+        </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+      </elements>
+      <inboundTemplate encoding="base64">PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+DQo8
+cmVzdWx0Pg0KICAgIDx2aXNpdF9pZD52YWx1ZTwvdmlzaXRfaWQ+DQogICAgPHN5c3RlbV9pZD52
+YWx1ZTwvc3lzdGVtX2lkPg0KICAgIDx2aXNpdF9kYXRlPnZhbHVlPC92aXNpdF9kYXRlPg0KICAg
+IDxjcmVhdGVkX2F0PnZhbHVlPC9jcmVhdGVkX2F0Pg0KICAgIDxjcmVhdGVkX2J5PnZhbHVlPC9j
+cmVhdGVkX2J5Pg0KPC9yZXN1bHQ+DQo=</inboundTemplate>
+      <outboundTemplate encoding="base64">TVNIfF5+XCZ8fDE2NzkyfHx8MjAxNzA0MjcxMTM3fHxPUlVeUjAxfFEzMzU5Mzk1MDFUMzM3MzEx
+MDAyfFB8Mi4zfHx8ClBJRHx8fHx8Xl58Xl58fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8Ck5LMXwx
+fF5efEZUSHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHwKTksxfDJ8Xl58Q0h8fHx8
+fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8ClBWMXx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8
+fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHwKT0JYfDF8U1R8Xl58fHx8fHx8fHx8fAo=</outboundTemplate>
+      <inboundDataType>XML</inboundDataType>
+      <outboundDataType>HL7V2</outboundDataType>
+      <inboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+        <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+          <stripNamespaces>true</stripNamespaces>
+        </serializationProperties>
+        <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+          <splitType>Element_Name</splitType>
+          <elementName></elementName>
+          <level>1</level>
+          <query></query>
+          <batchScript></batchScript>
+        </batchProperties>
+      </inboundProperties>
+      <outboundProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2DataTypeProperties" version="3.5.1">
+        <serializationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2SerializationProperties" version="3.5.1">
+          <handleRepetitions>true</handleRepetitions>
+          <handleSubcomponents>true</handleSubcomponents>
+          <useStrictParser>false</useStrictParser>
+          <useStrictValidation>false</useStrictValidation>
+          <stripNamespaces>true</stripNamespaces>
+          <segmentDelimiter>\r</segmentDelimiter>
+          <convertLineBreaks>true</convertLineBreaks>
+        </serializationProperties>
+        <deserializationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2DeserializationProperties" version="3.5.1">
+          <useStrictParser>false</useStrictParser>
+          <useStrictValidation>false</useStrictValidation>
+          <segmentDelimiter>\r</segmentDelimiter>
+        </deserializationProperties>
+        <batchProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2BatchProperties" version="3.5.1">
+          <splitType>MSH_Segment</splitType>
+          <batchScript></batchScript>
+        </batchProperties>
+        <responseGenerationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2ResponseGenerationProperties" version="3.5.1">
+          <segmentDelimiter>\r</segmentDelimiter>
+          <successfulACKCode>AA</successfulACKCode>
+          <successfulACKMessage></successfulACKMessage>
+          <errorACKCode>AE</errorACKCode>
+          <errorACKMessage>An Error Occurred Processing Message.</errorACKMessage>
+          <rejectedACKCode>AR</rejectedACKCode>
+          <rejectedACKMessage>Message Rejected.</rejectedACKMessage>
+          <msh15ACKAccept>false</msh15ACKAccept>
+          <dateFormat>yyyyMMddHHmmss.SSS</dateFormat>
+        </responseGenerationProperties>
+        <responseValidationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2ResponseValidationProperties" version="3.5.1">
+          <successfulACKCode>AA,CA</successfulACKCode>
+          <errorACKCode>AE,CE</errorACKCode>
+          <rejectedACKCode>AR,CR</rejectedACKCode>
+          <validateMessageControlId>true</validateMessageControlId>
+          <originalMessageControlId>Destination_Encoded</originalMessageControlId>
+          <originalIdMapVariable></originalIdMapVariable>
+        </responseValidationProperties>
+      </outboundProperties>
+    </transformer>
+    <filter version="3.5.1">
+      <elements/>
+    </filter>
+    <transportName>Database Reader</transportName>
+    <mode>SOURCE</mode>
+    <enabled>true</enabled>
+    <waitForPrevious>true</waitForPrevious>
+  </sourceConnector>
+  <destinationConnectors>
+    <connector version="3.5.1">
+      <metaDataId>2</metaDataId>
+      <name>ProduceHL7</name>
+      <properties class="com.mirth.connect.connectors.tcp.TcpDispatcherProperties" version="3.5.1">
+        <pluginProperties/>
+        <destinationConnectorProperties version="3.5.1">
+          <queueEnabled>true</queueEnabled>
+          <sendFirst>true</sendFirst>
+          <retryIntervalMillis>10000</retryIntervalMillis>
+          <regenerateTemplate>false</regenerateTemplate>
+          <retryCount>2</retryCount>
+          <rotate>false</rotate>
+          <includeFilterTransformer>false</includeFilterTransformer>
+          <threadCount>4</threadCount>
+          <threadAssignmentVariable></threadAssignmentVariable>
+          <validateResponse>false</validateResponse>
+          <resourceIds class="linked-hash-map">
+            <entry>
+              <string>Default Resource</string>
+              <string>[Default Resource]</string>
+            </entry>
+          </resourceIds>
+          <queueBufferSize>1000</queueBufferSize>
+          <reattachAttachments>true</reattachAttachments>
+        </destinationConnectorProperties>
+        <transmissionModeProperties class="com.mirth.connect.plugins.mllpmode.MLLPModeProperties">
+          <pluginPointName>MLLP</pluginPointName>
+          <startOfMessageBytes>0B</startOfMessageBytes>
+          <endOfMessageBytes>1C0D</endOfMessageBytes>
+          <useMLLPv2>false</useMLLPv2>
+          <ackBytes>06</ackBytes>
+          <nackBytes>15</nackBytes>
+          <maxRetries>2</maxRetries>
+        </transmissionModeProperties>
+        <remoteAddress>${anc_server_address}</remoteAddress>
+        <remotePort>9781</remotePort>
+        <overrideLocalBinding>false</overrideLocalBinding>
+        <localAddress>0.0.0.0</localAddress>
+        <localPort>0</localPort>
+        <sendTimeout>5000</sendTimeout>
+        <bufferSize>65536</bufferSize>
+        <keepConnectionOpen>false</keepConnectionOpen>
+        <checkRemoteHost>false</checkRemoteHost>
+        <responseTimeout>5000</responseTimeout>
+        <ignoreResponse>true</ignoreResponse>
+        <queueOnResponseTimeout>true</queueOnResponseTimeout>
+        <dataTypeBinary>false</dataTypeBinary>
+        <charsetEncoding>DEFAULT_ENCODING</charsetEncoding>
+        <template>${message.encodedData}</template>
+      </properties>
+      <transformer version="3.5.1">
+        <elements/>
+        <inboundTemplate encoding="base64"></inboundTemplate>
+        <inboundDataType>HL7V2</inboundDataType>
+        <outboundDataType>HL7V2</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2DataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2SerializationProperties" version="3.5.1">
+            <handleRepetitions>true</handleRepetitions>
+            <handleSubcomponents>true</handleSubcomponents>
+            <useStrictParser>false</useStrictParser>
+            <useStrictValidation>false</useStrictValidation>
+            <stripNamespaces>true</stripNamespaces>
+            <segmentDelimiter>\r</segmentDelimiter>
+            <convertLineBreaks>true</convertLineBreaks>
+          </serializationProperties>
+          <deserializationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2DeserializationProperties" version="3.5.1">
+            <useStrictParser>false</useStrictParser>
+            <useStrictValidation>false</useStrictValidation>
+            <segmentDelimiter>\r</segmentDelimiter>
+          </deserializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2BatchProperties" version="3.5.1">
+            <splitType>MSH_Segment</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+          <responseGenerationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2ResponseGenerationProperties" version="3.5.1">
+            <segmentDelimiter>\r</segmentDelimiter>
+            <successfulACKCode>AA</successfulACKCode>
+            <successfulACKMessage></successfulACKMessage>
+            <errorACKCode>AE</errorACKCode>
+            <errorACKMessage>An Error Occurred Processing Message.</errorACKMessage>
+            <rejectedACKCode>AR</rejectedACKCode>
+            <rejectedACKMessage>Message Rejected.</rejectedACKMessage>
+            <msh15ACKAccept>false</msh15ACKAccept>
+            <dateFormat>yyyyMMddHHmmss.SSS</dateFormat>
+          </responseGenerationProperties>
+          <responseValidationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2ResponseValidationProperties" version="3.5.1">
+            <successfulACKCode>AA,CA</successfulACKCode>
+            <errorACKCode>AE,CE</errorACKCode>
+            <rejectedACKCode>AR,CR</rejectedACKCode>
+            <validateMessageControlId>true</validateMessageControlId>
+            <originalMessageControlId>Destination_Encoded</originalMessageControlId>
+            <originalIdMapVariable></originalIdMapVariable>
+          </responseValidationProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2DataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2SerializationProperties" version="3.5.1">
+            <handleRepetitions>true</handleRepetitions>
+            <handleSubcomponents>true</handleSubcomponents>
+            <useStrictParser>false</useStrictParser>
+            <useStrictValidation>false</useStrictValidation>
+            <stripNamespaces>true</stripNamespaces>
+            <segmentDelimiter>\r</segmentDelimiter>
+            <convertLineBreaks>true</convertLineBreaks>
+          </serializationProperties>
+          <deserializationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2DeserializationProperties" version="3.5.1">
+            <useStrictParser>false</useStrictParser>
+            <useStrictValidation>false</useStrictValidation>
+            <segmentDelimiter>\r</segmentDelimiter>
+          </deserializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2BatchProperties" version="3.5.1">
+            <splitType>MSH_Segment</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+          <responseGenerationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2ResponseGenerationProperties" version="3.5.1">
+            <segmentDelimiter>\r</segmentDelimiter>
+            <successfulACKCode>AA</successfulACKCode>
+            <successfulACKMessage></successfulACKMessage>
+            <errorACKCode>AE</errorACKCode>
+            <errorACKMessage>An Error Occurred Processing Message.</errorACKMessage>
+            <rejectedACKCode>AR</rejectedACKCode>
+            <rejectedACKMessage>Message Rejected.</rejectedACKMessage>
+            <msh15ACKAccept>false</msh15ACKAccept>
+            <dateFormat>yyyyMMddHHmmss.SSS</dateFormat>
+          </responseGenerationProperties>
+          <responseValidationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2ResponseValidationProperties" version="3.5.1">
+            <successfulACKCode>AA,CA</successfulACKCode>
+            <errorACKCode>AE,CE</errorACKCode>
+            <rejectedACKCode>AR,CR</rejectedACKCode>
+            <validateMessageControlId>true</validateMessageControlId>
+            <originalMessageControlId>Destination_Encoded</originalMessageControlId>
+            <originalIdMapVariable></originalIdMapVariable>
+          </responseValidationProperties>
+        </outboundProperties>
+      </transformer>
+      <responseTransformer version="3.5.1">
+        <elements>
+          <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+            <name>Errorhandling</name>
+            <sequenceNumber>0</sequenceNumber>
+            <script>if (responseStatus == QUEUED &amp;&amp; connectorMessage.getSendAttempts() &gt;= 2) 
+{
+	responseStatus = ERROR;
+}</script>
+          </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        </elements>
+        <inboundTemplate encoding="base64"></inboundTemplate>
+        <outboundTemplate encoding="base64"></outboundTemplate>
+        <inboundDataType>HL7V2</inboundDataType>
+        <outboundDataType>HL7V2</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2DataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2SerializationProperties" version="3.5.1">
+            <handleRepetitions>true</handleRepetitions>
+            <handleSubcomponents>true</handleSubcomponents>
+            <useStrictParser>false</useStrictParser>
+            <useStrictValidation>false</useStrictValidation>
+            <stripNamespaces>true</stripNamespaces>
+            <segmentDelimiter>\r</segmentDelimiter>
+            <convertLineBreaks>true</convertLineBreaks>
+          </serializationProperties>
+          <deserializationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2DeserializationProperties" version="3.5.1">
+            <useStrictParser>false</useStrictParser>
+            <useStrictValidation>false</useStrictValidation>
+            <segmentDelimiter>\r</segmentDelimiter>
+          </deserializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2BatchProperties" version="3.5.1">
+            <splitType>MSH_Segment</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+          <responseGenerationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2ResponseGenerationProperties" version="3.5.1">
+            <segmentDelimiter>\r</segmentDelimiter>
+            <successfulACKCode>AA</successfulACKCode>
+            <successfulACKMessage></successfulACKMessage>
+            <errorACKCode>AE</errorACKCode>
+            <errorACKMessage>An Error Occurred Processing Message.</errorACKMessage>
+            <rejectedACKCode>AR</rejectedACKCode>
+            <rejectedACKMessage>Message Rejected.</rejectedACKMessage>
+            <msh15ACKAccept>false</msh15ACKAccept>
+            <dateFormat>yyyyMMddHHmmss.SSS</dateFormat>
+          </responseGenerationProperties>
+          <responseValidationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2ResponseValidationProperties" version="3.5.1">
+            <successfulACKCode>AA,CA</successfulACKCode>
+            <errorACKCode>AE,CE</errorACKCode>
+            <rejectedACKCode>AR,CR</rejectedACKCode>
+            <validateMessageControlId>true</validateMessageControlId>
+            <originalMessageControlId>Destination_Encoded</originalMessageControlId>
+            <originalIdMapVariable></originalIdMapVariable>
+          </responseValidationProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2DataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2SerializationProperties" version="3.5.1">
+            <handleRepetitions>true</handleRepetitions>
+            <handleSubcomponents>true</handleSubcomponents>
+            <useStrictParser>false</useStrictParser>
+            <useStrictValidation>false</useStrictValidation>
+            <stripNamespaces>true</stripNamespaces>
+            <segmentDelimiter>\r</segmentDelimiter>
+            <convertLineBreaks>true</convertLineBreaks>
+          </serializationProperties>
+          <deserializationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2DeserializationProperties" version="3.5.1">
+            <useStrictParser>false</useStrictParser>
+            <useStrictValidation>false</useStrictValidation>
+            <segmentDelimiter>\r</segmentDelimiter>
+          </deserializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2BatchProperties" version="3.5.1">
+            <splitType>MSH_Segment</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+          <responseGenerationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2ResponseGenerationProperties" version="3.5.1">
+            <segmentDelimiter>\r</segmentDelimiter>
+            <successfulACKCode>AA</successfulACKCode>
+            <successfulACKMessage></successfulACKMessage>
+            <errorACKCode>AE</errorACKCode>
+            <errorACKMessage>An Error Occurred Processing Message.</errorACKMessage>
+            <rejectedACKCode>AR</rejectedACKCode>
+            <rejectedACKMessage>Message Rejected.</rejectedACKMessage>
+            <msh15ACKAccept>false</msh15ACKAccept>
+            <dateFormat>yyyyMMddHHmmss.SSS</dateFormat>
+          </responseGenerationProperties>
+          <responseValidationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2ResponseValidationProperties" version="3.5.1">
+            <successfulACKCode>AA,CA</successfulACKCode>
+            <errorACKCode>AE,CE</errorACKCode>
+            <rejectedACKCode>AR,CR</rejectedACKCode>
+            <validateMessageControlId>true</validateMessageControlId>
+            <originalMessageControlId>Destination_Encoded</originalMessageControlId>
+            <originalIdMapVariable></originalIdMapVariable>
+          </responseValidationProperties>
+        </outboundProperties>
+      </responseTransformer>
+      <filter version="3.5.1">
+        <elements/>
+      </filter>
+      <transportName>TCP Sender</transportName>
+      <mode>DESTINATION</mode>
+      <enabled>true</enabled>
+      <waitForPrevious>true</waitForPrevious>
+    </connector>
+    <connector version="3.5.1">
+      <metaDataId>3</metaDataId>
+      <name>SendToServer</name>
+      <properties class="com.mirth.connect.connectors.vm.VmDispatcherProperties" version="3.5.1">
+        <pluginProperties/>
+        <destinationConnectorProperties version="3.5.1">
+          <queueEnabled>false</queueEnabled>
+          <sendFirst>false</sendFirst>
+          <retryIntervalMillis>10000</retryIntervalMillis>
+          <regenerateTemplate>false</regenerateTemplate>
+          <retryCount>0</retryCount>
+          <rotate>false</rotate>
+          <includeFilterTransformer>false</includeFilterTransformer>
+          <threadCount>1</threadCount>
+          <threadAssignmentVariable></threadAssignmentVariable>
+          <validateResponse>false</validateResponse>
+          <resourceIds class="linked-hash-map">
+            <entry>
+              <string>Default Resource</string>
+              <string>[Default Resource]</string>
+            </entry>
+          </resourceIds>
+          <queueBufferSize>1000</queueBufferSize>
+          <reattachAttachments>true</reattachAttachments>
+        </destinationConnectorProperties>
+        <channelId>none</channelId>
+        <channelTemplate>${message.encodedData}</channelTemplate>
+        <mapVariables/>
+      </properties>
+      <transformer version="3.5.1">
+        <elements/>
+        <inboundDataType>HL7V2</inboundDataType>
+        <outboundDataType>HL7V2</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2DataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2SerializationProperties" version="3.5.1">
+            <handleRepetitions>true</handleRepetitions>
+            <handleSubcomponents>true</handleSubcomponents>
+            <useStrictParser>false</useStrictParser>
+            <useStrictValidation>false</useStrictValidation>
+            <stripNamespaces>true</stripNamespaces>
+            <segmentDelimiter>\r</segmentDelimiter>
+            <convertLineBreaks>true</convertLineBreaks>
+          </serializationProperties>
+          <deserializationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2DeserializationProperties" version="3.5.1">
+            <useStrictParser>false</useStrictParser>
+            <useStrictValidation>false</useStrictValidation>
+            <segmentDelimiter>\r</segmentDelimiter>
+          </deserializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2BatchProperties" version="3.5.1">
+            <splitType>MSH_Segment</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+          <responseGenerationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2ResponseGenerationProperties" version="3.5.1">
+            <segmentDelimiter>\r</segmentDelimiter>
+            <successfulACKCode>AA</successfulACKCode>
+            <successfulACKMessage></successfulACKMessage>
+            <errorACKCode>AE</errorACKCode>
+            <errorACKMessage>An Error Occurred Processing Message.</errorACKMessage>
+            <rejectedACKCode>AR</rejectedACKCode>
+            <rejectedACKMessage>Message Rejected.</rejectedACKMessage>
+            <msh15ACKAccept>false</msh15ACKAccept>
+            <dateFormat>yyyyMMddHHmmss.SSS</dateFormat>
+          </responseGenerationProperties>
+          <responseValidationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2ResponseValidationProperties" version="3.5.1">
+            <successfulACKCode>AA,CA</successfulACKCode>
+            <errorACKCode>AE,CE</errorACKCode>
+            <rejectedACKCode>AR,CR</rejectedACKCode>
+            <validateMessageControlId>true</validateMessageControlId>
+            <originalMessageControlId>Destination_Encoded</originalMessageControlId>
+            <originalIdMapVariable></originalIdMapVariable>
+          </responseValidationProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2DataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2SerializationProperties" version="3.5.1">
+            <handleRepetitions>true</handleRepetitions>
+            <handleSubcomponents>true</handleSubcomponents>
+            <useStrictParser>false</useStrictParser>
+            <useStrictValidation>false</useStrictValidation>
+            <stripNamespaces>true</stripNamespaces>
+            <segmentDelimiter>\r</segmentDelimiter>
+            <convertLineBreaks>true</convertLineBreaks>
+          </serializationProperties>
+          <deserializationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2DeserializationProperties" version="3.5.1">
+            <useStrictParser>false</useStrictParser>
+            <useStrictValidation>false</useStrictValidation>
+            <segmentDelimiter>\r</segmentDelimiter>
+          </deserializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2BatchProperties" version="3.5.1">
+            <splitType>MSH_Segment</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+          <responseGenerationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2ResponseGenerationProperties" version="3.5.1">
+            <segmentDelimiter>\r</segmentDelimiter>
+            <successfulACKCode>AA</successfulACKCode>
+            <successfulACKMessage></successfulACKMessage>
+            <errorACKCode>AE</errorACKCode>
+            <errorACKMessage>An Error Occurred Processing Message.</errorACKMessage>
+            <rejectedACKCode>AR</rejectedACKCode>
+            <rejectedACKMessage>Message Rejected.</rejectedACKMessage>
+            <msh15ACKAccept>false</msh15ACKAccept>
+            <dateFormat>yyyyMMddHHmmss.SSS</dateFormat>
+          </responseGenerationProperties>
+          <responseValidationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2ResponseValidationProperties" version="3.5.1">
+            <successfulACKCode>AA,CA</successfulACKCode>
+            <errorACKCode>AE,CE</errorACKCode>
+            <rejectedACKCode>AR,CR</rejectedACKCode>
+            <validateMessageControlId>true</validateMessageControlId>
+            <originalMessageControlId>Destination_Encoded</originalMessageControlId>
+            <originalIdMapVariable></originalIdMapVariable>
+          </responseValidationProperties>
+        </outboundProperties>
+      </transformer>
+      <responseTransformer version="3.5.1">
+        <elements/>
+        <inboundDataType>HL7V2</inboundDataType>
+        <outboundDataType>HL7V2</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2DataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2SerializationProperties" version="3.5.1">
+            <handleRepetitions>true</handleRepetitions>
+            <handleSubcomponents>true</handleSubcomponents>
+            <useStrictParser>false</useStrictParser>
+            <useStrictValidation>false</useStrictValidation>
+            <stripNamespaces>true</stripNamespaces>
+            <segmentDelimiter>\r</segmentDelimiter>
+            <convertLineBreaks>true</convertLineBreaks>
+          </serializationProperties>
+          <deserializationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2DeserializationProperties" version="3.5.1">
+            <useStrictParser>false</useStrictParser>
+            <useStrictValidation>false</useStrictValidation>
+            <segmentDelimiter>\r</segmentDelimiter>
+          </deserializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2BatchProperties" version="3.5.1">
+            <splitType>MSH_Segment</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+          <responseGenerationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2ResponseGenerationProperties" version="3.5.1">
+            <segmentDelimiter>\r</segmentDelimiter>
+            <successfulACKCode>AA</successfulACKCode>
+            <successfulACKMessage></successfulACKMessage>
+            <errorACKCode>AE</errorACKCode>
+            <errorACKMessage>An Error Occurred Processing Message.</errorACKMessage>
+            <rejectedACKCode>AR</rejectedACKCode>
+            <rejectedACKMessage>Message Rejected.</rejectedACKMessage>
+            <msh15ACKAccept>false</msh15ACKAccept>
+            <dateFormat>yyyyMMddHHmmss.SSS</dateFormat>
+          </responseGenerationProperties>
+          <responseValidationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2ResponseValidationProperties" version="3.5.1">
+            <successfulACKCode>AA,CA</successfulACKCode>
+            <errorACKCode>AE,CE</errorACKCode>
+            <rejectedACKCode>AR,CR</rejectedACKCode>
+            <validateMessageControlId>true</validateMessageControlId>
+            <originalMessageControlId>Destination_Encoded</originalMessageControlId>
+            <originalIdMapVariable></originalIdMapVariable>
+          </responseValidationProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2DataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2SerializationProperties" version="3.5.1">
+            <handleRepetitions>true</handleRepetitions>
+            <handleSubcomponents>true</handleSubcomponents>
+            <useStrictParser>false</useStrictParser>
+            <useStrictValidation>false</useStrictValidation>
+            <stripNamespaces>true</stripNamespaces>
+            <segmentDelimiter>\r</segmentDelimiter>
+            <convertLineBreaks>true</convertLineBreaks>
+          </serializationProperties>
+          <deserializationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2DeserializationProperties" version="3.5.1">
+            <useStrictParser>false</useStrictParser>
+            <useStrictValidation>false</useStrictValidation>
+            <segmentDelimiter>\r</segmentDelimiter>
+          </deserializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2BatchProperties" version="3.5.1">
+            <splitType>MSH_Segment</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+          <responseGenerationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2ResponseGenerationProperties" version="3.5.1">
+            <segmentDelimiter>\r</segmentDelimiter>
+            <successfulACKCode>AA</successfulACKCode>
+            <successfulACKMessage></successfulACKMessage>
+            <errorACKCode>AE</errorACKCode>
+            <errorACKMessage>An Error Occurred Processing Message.</errorACKMessage>
+            <rejectedACKCode>AR</rejectedACKCode>
+            <rejectedACKMessage>Message Rejected.</rejectedACKMessage>
+            <msh15ACKAccept>false</msh15ACKAccept>
+            <dateFormat>yyyyMMddHHmmss.SSS</dateFormat>
+          </responseGenerationProperties>
+          <responseValidationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2ResponseValidationProperties" version="3.5.1">
+            <successfulACKCode>AA,CA</successfulACKCode>
+            <errorACKCode>AE,CE</errorACKCode>
+            <rejectedACKCode>AR,CR</rejectedACKCode>
+            <validateMessageControlId>true</validateMessageControlId>
+            <originalMessageControlId>Destination_Encoded</originalMessageControlId>
+            <originalIdMapVariable></originalIdMapVariable>
+          </responseValidationProperties>
+        </outboundProperties>
+      </responseTransformer>
+      <filter version="3.5.1">
+        <elements/>
+      </filter>
+      <transportName>Channel Writer</transportName>
+      <mode>DESTINATION</mode>
+      <enabled>false</enabled>
+      <waitForPrevious>true</waitForPrevious>
+    </connector>
+    <connector version="3.5.1">
+      <metaDataId>5</metaDataId>
+      <name>GenerateHL7</name>
+      <properties class="com.mirth.connect.connectors.file.FileDispatcherProperties" version="3.5.1">
+        <pluginProperties/>
+        <destinationConnectorProperties version="3.5.1">
+          <queueEnabled>false</queueEnabled>
+          <sendFirst>false</sendFirst>
+          <retryIntervalMillis>10000</retryIntervalMillis>
+          <regenerateTemplate>false</regenerateTemplate>
+          <retryCount>0</retryCount>
+          <rotate>false</rotate>
+          <includeFilterTransformer>false</includeFilterTransformer>
+          <threadCount>1</threadCount>
+          <threadAssignmentVariable></threadAssignmentVariable>
+          <validateResponse>false</validateResponse>
+          <resourceIds class="linked-hash-map">
+            <entry>
+              <string>Default Resource</string>
+              <string>[Default Resource]</string>
+            </entry>
+          </resourceIds>
+          <queueBufferSize>1000</queueBufferSize>
+          <reattachAttachments>true</reattachAttachments>
+        </destinationConnectorProperties>
+        <scheme>FILE</scheme>
+        <host>C:/Users/FOpiyo/Desktop/SETS-ANC/anc</host>
+        <outputPattern>generated.hl7</outputPattern>
+        <anonymous>true</anonymous>
+        <username>anonymous</username>
+        <password>anonymous</password>
+        <timeout>10000</timeout>
+        <secure>true</secure>
+        <passive>true</passive>
+        <validateConnection>true</validateConnection>
+        <outputAppend>true</outputAppend>
+        <errorOnExists>false</errorOnExists>
+        <temporary>false</temporary>
+        <binary>false</binary>
+        <charsetEncoding>DEFAULT_ENCODING</charsetEncoding>
+        <template>${message.encodedData}</template>
+      </properties>
+      <transformer version="3.5.1">
+        <elements>
+          <com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+            <name>GenerateMessage</name>
+            <sequenceNumber>0</sequenceNumber>
+            <script>alerts.sendAlert(&apos;The study ID is shared across multiple person IDs&apos;);</script>
+          </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        </elements>
+        <inboundTemplate encoding="base64"></inboundTemplate>
+        <outboundTemplate encoding="base64"></outboundTemplate>
+        <inboundDataType>HL7V2</inboundDataType>
+        <outboundDataType>HL7V2</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2DataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2SerializationProperties" version="3.5.1">
+            <handleRepetitions>true</handleRepetitions>
+            <handleSubcomponents>true</handleSubcomponents>
+            <useStrictParser>false</useStrictParser>
+            <useStrictValidation>false</useStrictValidation>
+            <stripNamespaces>true</stripNamespaces>
+            <segmentDelimiter>\r</segmentDelimiter>
+            <convertLineBreaks>true</convertLineBreaks>
+          </serializationProperties>
+          <deserializationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2DeserializationProperties" version="3.5.1">
+            <useStrictParser>false</useStrictParser>
+            <useStrictValidation>false</useStrictValidation>
+            <segmentDelimiter>\r</segmentDelimiter>
+          </deserializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2BatchProperties" version="3.5.1">
+            <splitType>MSH_Segment</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+          <responseGenerationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2ResponseGenerationProperties" version="3.5.1">
+            <segmentDelimiter>\r</segmentDelimiter>
+            <successfulACKCode>AA</successfulACKCode>
+            <successfulACKMessage></successfulACKMessage>
+            <errorACKCode>AE</errorACKCode>
+            <errorACKMessage>An Error Occurred Processing Message.</errorACKMessage>
+            <rejectedACKCode>AR</rejectedACKCode>
+            <rejectedACKMessage>Message Rejected.</rejectedACKMessage>
+            <msh15ACKAccept>false</msh15ACKAccept>
+            <dateFormat>yyyyMMddHHmmss.SSS</dateFormat>
+          </responseGenerationProperties>
+          <responseValidationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2ResponseValidationProperties" version="3.5.1">
+            <successfulACKCode>AA,CA</successfulACKCode>
+            <errorACKCode>AE,CE</errorACKCode>
+            <rejectedACKCode>AR,CR</rejectedACKCode>
+            <validateMessageControlId>true</validateMessageControlId>
+            <originalMessageControlId>Destination_Encoded</originalMessageControlId>
+            <originalIdMapVariable></originalIdMapVariable>
+          </responseValidationProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2DataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2SerializationProperties" version="3.5.1">
+            <handleRepetitions>true</handleRepetitions>
+            <handleSubcomponents>true</handleSubcomponents>
+            <useStrictParser>false</useStrictParser>
+            <useStrictValidation>false</useStrictValidation>
+            <stripNamespaces>true</stripNamespaces>
+            <segmentDelimiter>\r</segmentDelimiter>
+            <convertLineBreaks>true</convertLineBreaks>
+          </serializationProperties>
+          <deserializationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2DeserializationProperties" version="3.5.1">
+            <useStrictParser>false</useStrictParser>
+            <useStrictValidation>false</useStrictValidation>
+            <segmentDelimiter>\r</segmentDelimiter>
+          </deserializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2BatchProperties" version="3.5.1">
+            <splitType>MSH_Segment</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+          <responseGenerationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2ResponseGenerationProperties" version="3.5.1">
+            <segmentDelimiter>\r</segmentDelimiter>
+            <successfulACKCode>AA</successfulACKCode>
+            <successfulACKMessage></successfulACKMessage>
+            <errorACKCode>AE</errorACKCode>
+            <errorACKMessage>An Error Occurred Processing Message.</errorACKMessage>
+            <rejectedACKCode>AR</rejectedACKCode>
+            <rejectedACKMessage>Message Rejected.</rejectedACKMessage>
+            <msh15ACKAccept>false</msh15ACKAccept>
+            <dateFormat>yyyyMMddHHmmss.SSS</dateFormat>
+          </responseGenerationProperties>
+          <responseValidationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2ResponseValidationProperties" version="3.5.1">
+            <successfulACKCode>AA,CA</successfulACKCode>
+            <errorACKCode>AE,CE</errorACKCode>
+            <rejectedACKCode>AR,CR</rejectedACKCode>
+            <validateMessageControlId>true</validateMessageControlId>
+            <originalMessageControlId>Destination_Encoded</originalMessageControlId>
+            <originalIdMapVariable></originalIdMapVariable>
+          </responseValidationProperties>
+        </outboundProperties>
+      </transformer>
+      <responseTransformer version="3.5.1">
+        <elements/>
+        <inboundDataType>HL7V2</inboundDataType>
+        <outboundDataType>HL7V2</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2DataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2SerializationProperties" version="3.5.1">
+            <handleRepetitions>true</handleRepetitions>
+            <handleSubcomponents>true</handleSubcomponents>
+            <useStrictParser>false</useStrictParser>
+            <useStrictValidation>false</useStrictValidation>
+            <stripNamespaces>true</stripNamespaces>
+            <segmentDelimiter>\r</segmentDelimiter>
+            <convertLineBreaks>true</convertLineBreaks>
+          </serializationProperties>
+          <deserializationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2DeserializationProperties" version="3.5.1">
+            <useStrictParser>false</useStrictParser>
+            <useStrictValidation>false</useStrictValidation>
+            <segmentDelimiter>\r</segmentDelimiter>
+          </deserializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2BatchProperties" version="3.5.1">
+            <splitType>MSH_Segment</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+          <responseGenerationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2ResponseGenerationProperties" version="3.5.1">
+            <segmentDelimiter>\r</segmentDelimiter>
+            <successfulACKCode>AA</successfulACKCode>
+            <successfulACKMessage></successfulACKMessage>
+            <errorACKCode>AE</errorACKCode>
+            <errorACKMessage>An Error Occurred Processing Message.</errorACKMessage>
+            <rejectedACKCode>AR</rejectedACKCode>
+            <rejectedACKMessage>Message Rejected.</rejectedACKMessage>
+            <msh15ACKAccept>false</msh15ACKAccept>
+            <dateFormat>yyyyMMddHHmmss.SSS</dateFormat>
+          </responseGenerationProperties>
+          <responseValidationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2ResponseValidationProperties" version="3.5.1">
+            <successfulACKCode>AA,CA</successfulACKCode>
+            <errorACKCode>AE,CE</errorACKCode>
+            <rejectedACKCode>AR,CR</rejectedACKCode>
+            <validateMessageControlId>true</validateMessageControlId>
+            <originalMessageControlId>Destination_Encoded</originalMessageControlId>
+            <originalIdMapVariable></originalIdMapVariable>
+          </responseValidationProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2DataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2SerializationProperties" version="3.5.1">
+            <handleRepetitions>true</handleRepetitions>
+            <handleSubcomponents>true</handleSubcomponents>
+            <useStrictParser>false</useStrictParser>
+            <useStrictValidation>false</useStrictValidation>
+            <stripNamespaces>true</stripNamespaces>
+            <segmentDelimiter>\r</segmentDelimiter>
+            <convertLineBreaks>true</convertLineBreaks>
+          </serializationProperties>
+          <deserializationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2DeserializationProperties" version="3.5.1">
+            <useStrictParser>false</useStrictParser>
+            <useStrictValidation>false</useStrictValidation>
+            <segmentDelimiter>\r</segmentDelimiter>
+          </deserializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2BatchProperties" version="3.5.1">
+            <splitType>MSH_Segment</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+          <responseGenerationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2ResponseGenerationProperties" version="3.5.1">
+            <segmentDelimiter>\r</segmentDelimiter>
+            <successfulACKCode>AA</successfulACKCode>
+            <successfulACKMessage></successfulACKMessage>
+            <errorACKCode>AE</errorACKCode>
+            <errorACKMessage>An Error Occurred Processing Message.</errorACKMessage>
+            <rejectedACKCode>AR</rejectedACKCode>
+            <rejectedACKMessage>Message Rejected.</rejectedACKMessage>
+            <msh15ACKAccept>false</msh15ACKAccept>
+            <dateFormat>yyyyMMddHHmmss.SSS</dateFormat>
+          </responseGenerationProperties>
+          <responseValidationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2ResponseValidationProperties" version="3.5.1">
+            <successfulACKCode>AA,CA</successfulACKCode>
+            <errorACKCode>AE,CE</errorACKCode>
+            <rejectedACKCode>AR,CR</rejectedACKCode>
+            <validateMessageControlId>true</validateMessageControlId>
+            <originalMessageControlId>Destination_Encoded</originalMessageControlId>
+            <originalIdMapVariable></originalIdMapVariable>
+          </responseValidationProperties>
+        </outboundProperties>
+      </responseTransformer>
+      <filter version="3.5.1">
+        <elements/>
+      </filter>
+      <transportName>File Writer</transportName>
+      <mode>DESTINATION</mode>
+      <enabled>false</enabled>
+      <waitForPrevious>true</waitForPrevious>
+    </connector>
+  </destinationConnectors>
+  <preprocessingScript>// Modify the message variable below to pre process data
+importPackage(java.io);
+importPackage(java.util);
+importPackage(org.apache.commons.io);
+
+//get the details of the machine doing the transmission
+
+var	hostName;
+try{
+ hostName = Packages.java.net.InetAddress.getLocalHost().getHostName();
+}
+catch(e){logger.error(e);}
+
+var stats_string=&quot;&quot;;
+stats_string += &quot;Status of the ANC Data Transmission Channel&quot;;
+stats_string += &quot;\r\n&quot;;
+stats_string += &quot;\r\n&quot;;
+stats_string += &quot;The transmitting facility mflcode: &quot;+$g(&apos;facility_code&apos;);
+stats_string += &quot;\r\n&quot;;
+stats_string += &quot;\r\n&quot;;
+stats_string += &quot;The transmitting computer name: &quot;+hostName;
+stats_string += &quot;\r\n&quot;;
+stats_string += &quot;\r\n&quot;;
+var received=ChannelUtil.getReceivedCount(channelId);	
+stats_string += &quot;Message count retrieved from this computer-&quot;+received;
+stats_string += &quot;\r\n&quot;;
+stats_string += &quot;\r\n&quot;;		
+var sent=ChannelUtil.getSentCount(channelId);
+stats_string += &quot;Message count sent to the central server-&quot;+sent;
+stats_string += &quot;\r\n&quot;;
+stats_string += &quot;\r\n&quot;;
+var errorred=ChannelUtil.getErrorCount(channelId);
+stats_string += &quot;Messages with errors-&quot;+errorred;
+stats_string += &quot;\r\n&quot;;
+stats_string += &quot;\r\n&quot;;
+var queued=ChannelUtil.getQueuedCount(channelId);
+stats_string += &quot;Queued message count-&quot;+queued;
+stats_string += &quot;\r\n&quot;;
+stats_string += &quot;\r\n&quot;;
+
+var filtered=ChannelUtil.getFilteredCount(channelId);
+
+var transmission_date=DateUtil.getCurrentDate(&apos;dd-MM-YYYY&apos;);
+transmission_time=DateUtil.getCurrentDate(&apos;HH:mm:ss&apos;);
+
+
+stats_string += &quot;Transmission status on: &quot; + transmission_date + &quot; at &quot; +transmission_time;
+stats_string += &quot;\r\n&quot;;
+
+var file = new File(&apos;C:/Program Files/Mirth Connect/conf/anc/statistics.txt&apos;);
+
+//if (!file.exists())
+
+//{
+	try{
+		FileUtils.writeStringToFile(file,stats_string , &quot;UTF-8&quot;, false);
+		
+		
+	} catch(err){
+		logger.error(&apos;The statistics file was not created. &apos;+ err);
+	}
+
+
+
+return message;</preprocessingScript>
+  <postprocessingScript>/*
+
+// This script executes once after a message has been processed
+// Responses returned from here will be stored as &quot;Postprocessor&quot; in the response map
+//return;
+importPackage(java.io);
+importPackage(java.util);
+importPackage(org.apache.commons.io);
+
+
+//get the details of the machine doing the transmission
+
+var	hostName;
+try{
+ hostName = Packages.java.net.InetAddress.getLocalHost().getHostName();
+}
+catch(e){logger.error(e);}
+
+var stats_string=&quot;&quot;;
+stats_string += &quot;Status of the ANC Data Transmission Channel&quot;;
+stats_string += &quot;\r\n&quot;;
+stats_string += &quot;\r\n&quot;;
+stats_string += &quot;The transmitting computer name: &quot;+hostName;
+stats_string += &quot;\r\n&quot;;
+stats_string += &quot;\r\n&quot;;
+var received=ChannelUtil.getReceivedCount(channelId);	
+stats_string += &quot;Received messages-&quot;+received;
+stats_string += &quot;\r\n&quot;;
+stats_string += &quot;\r\n&quot;;		
+var sent=ChannelUtil.getSentCount(channelId);
+stats_string += &quot;Sent messages-&quot;+sent;
+stats_string += &quot;\r\n&quot;;
+stats_string += &quot;\r\n&quot;;
+var errorred=ChannelUtil.getErrorCount(channelId);
+stats_string += &quot;Errored messages-&quot;+errorred;
+stats_string += &quot;\r\n&quot;;
+stats_string += &quot;\r\n&quot;;
+var queued=ChannelUtil.getQueuedCount(channelId);
+stats_string += &quot;Queued messages-&quot;+queued;
+stats_string += &quot;\r\n&quot;;
+stats_string += &quot;\r\n&quot;;
+var filtered=ChannelUtil.getFilteredCount(channelId);
+stats_string += &quot;Filtered messages-&quot;+filtered;
+stats_string += &quot;\r\n&quot;;
+stats_string += &quot;\r\n&quot;;
+
+
+var transmission_timestamp = DateUtil.getCurrentDate(&apos;dd-MM-YYYY hh:mm:ss&apos;);
+stats_string += &quot;Transmission status as at: &quot; + transmission_timestamp;
+stats_string += &quot;\r\n&quot;;
+
+var file = new File(&apos;C:/Program Files/Mirth Connect/conf/anc/statistics.txt&apos;);
+
+var time_diff=DateUtil.getCurrentDate(&apos;mm&apos;);
+ 
+//if (time_diff&gt;=&quot;30&quot; &amp;&amp; time_diff &lt;=&quot;33&quot;)
+//{
+
+WriteStatistics();
+
+//}
+
+/*
+
+var d = new Date();
+var dayOfWeek = d.getDay();
+if (dayOfWeek == 0)
+{
+return true;
+}
+else
+{
+return false;
+} 
+
+*/
+
+/*
+function WriteStatistics()
+{
+
+//if (!file.exists())
+
+//{
+	try{
+		FileUtils.writeStringToFile(file,stats_string , &quot;UTF-8&quot;, false);
+		
+		//logger.info(&apos;The runtime file has been created&apos;);
+	} catch(err){
+		logger.error(&apos;The statistics file was not created. &apos;+ err);
+	}
+
+}
+
+*/
+
+
+
+
+
+
+
+
+
+
+</postprocessingScript>
+  <deployScript>importPackage(java.io);
+importPackage(java.util);
+importPackage(org.apache.commons.io);
+
+
+//load the properties
+
+/*
+var properties = new Properties();
+properties.load(new FileInputStream(new File(&quot;C:/Program Files/Mirth Connect/conf/linkage.properties&quot;)));
+globalMap.globalVariableMap.putAll(properties);
+
+*/
+
+var file = new File(&apos;C:/Program Files/Mirth Connect/conf/runtime.txt&apos;);
+
+if (!file.exists()){
+	try{
+		FileUtils.writeStringToFile(file, &quot;2018-07-14&quot;, &quot;UTF-8&quot;, false);
+		
+		logger.info(&apos;The runtime file has been created&apos;);
+	} 
+	
+	catch(err){
+		logger.error(&apos;The runtime file was not created. &apos;+ err);
+	}
+} 
+
+
+// This script executes once when the channel is deployed
+// You only have access to the globalMap and globalChannelMap here to persist data
+
+//load the properties
+var properties = new Properties();
+properties.load(new FileInputStream(new File(&quot;C:/Program Files/Mirth Connect/conf/linkage.properties&quot;)));
+globalMap.globalVariableMap.putAll(properties);
+
+
+
+
+return;</deployScript>
+  <undeployScript>// This script executes once when the channel is undeployed
+// You only have access to the globalMap and globalChannelMap here to persist data
+return;</undeployScript>
+  <properties version="3.5.1">
+    <clearGlobalChannelMap>true</clearGlobalChannelMap>
+    <messageStorageMode>PRODUCTION</messageStorageMode>
+    <encryptData>false</encryptData>
+    <removeContentOnCompletion>true</removeContentOnCompletion>
+    <removeOnlyFilteredOnCompletion>false</removeOnlyFilteredOnCompletion>
+    <removeAttachmentsOnCompletion>false</removeAttachmentsOnCompletion>
+    <initialState>STARTED</initialState>
+    <storeAttachments>false</storeAttachments>
+    <metaDataColumns>
+      <metaDataColumn>
+        <name>SOURCE</name>
+        <type>STRING</type>
+        <mappingName>mirth_source</mappingName>
+      </metaDataColumn>
+      <metaDataColumn>
+        <name>TYPE</name>
+        <type>STRING</type>
+        <mappingName>mirth_type</mappingName>
+      </metaDataColumn>
+    </metaDataColumns>
+    <attachmentProperties version="3.5.1">
+      <type>None</type>
+      <properties/>
+    </attachmentProperties>
+    <resourceIds class="linked-hash-map">
+      <entry>
+        <string>Default Resource</string>
+        <string>[Default Resource]</string>
+      </entry>
+    </resourceIds>
+  </properties>
+  <exportData>
+    <metadata>
+      <enabled>true</enabled>
+      <lastModified>
+        <time>1554961036230</time>
+        <timezone>Africa/Nairobi</timezone>
+      </lastModified>
+      <pruningSettings>
+        <pruneMetaDataDays>1</pruneMetaDataDays>
+        <archiveEnabled>true</archiveEnabled>
+      </pruningSettings>
+    </metadata>
+    <codeTemplateLibraries>
+      <codeTemplateLibrary version="3.5.1">
+        <id>22a46415-6926-4c0f-9bdb-cea5b3a419cf</id>
+        <name>HISSCompanionHelperFunctions</name>
+        <revision>6</revision>
+        <lastModified>
+          <time>1552458957382</time>
+          <timezone>Africa/Nairobi</timezone>
+        </lastModified>
+        <description></description>
+        <includeNewChannels>false</includeNewChannels>
+        <enabledChannelIds>
+          <string>d31458af-2e81-4569-9bd2-33c9336960c7</string>
+          <string>277dabab-f772-4b1b-9c4a-abc55423646c</string>
+        </enabledChannelIds>
+        <disabledChannelIds>
+          <string>dd2e16ac-c55c-481e-8b29-baabea1f5037</string>
+          <string>2f280c72-e265-4e1e-9d51-228f004b5dca</string>
+          <string>fa4add78-c307-4bc3-985c-1fe219f28666</string>
+          <string>53b6c7c9-f95e-4af1-9f39-e6b24af31249</string>
+          <string>5556a4ce-fbc4-4bfd-a3c7-573c6db4b2d7</string>
+          <string>d60c401e-b95f-4bc3-899b-cb998409cd5b</string>
+          <string>da1d7a1e-69db-49b5-a5fe-90d762c2b264</string>
+          <string>cb856e60-c193-4b15-b42b-3056e08b28d6</string>
+          <string>6d8427b6-8f5d-4f9c-b08c-fb045cde3cc0</string>
+          <string>1a4082d4-5612-4a16-92c5-c404c4083d3f</string>
+          <string>cf7bfba4-0a45-46cd-94ea-099925df4a16</string>
+          <string>05169097-ac5e-405a-817c-ca5ce1af6b4f</string>
+          <string>e1b15f1c-5e46-436c-b3d0-24022ed7fa3a</string>
+          <string>582e298d-34f9-4c92-87e2-dc34d2415961</string>
+          <string>2f7656b6-0fc5-4b36-8706-88388c838b26</string>
+          <string>94c0ac89-95c6-4fd4-a626-772931d21070</string>
+          <string>dd835d09-a8b0-4e9c-ba5c-0bf71568b6a3</string>
+          <string>15bd225c-114d-4c0c-ae35-990783e51600</string>
+          <string>6a40a092-3ee2-4884-8efa-c7ec40fbcdfb</string>
+          <string>e27386f6-6c1f-4994-90a0-1e2cea6dd5d9</string>
+          <string>6a0cfdbf-7202-468b-924d-4272be0bbb8b</string>
+          <string>c66e6120-550c-4afb-8290-d8e3c06b8170</string>
+          <string>4add4e63-3dc2-4216-ae5a-0df42606b22f</string>
+          <string>40d2e79f-b700-4d7f-8bbf-93d9682da101</string>
+          <string>7529b807-c25c-4e81-bc5c-06c91b6e512e</string>
+          <string>1c8fe16c-8c67-4e7a-83c7-982127aa8ebd</string>
+          <string>1e3b74a2-2414-41b6-9e9c-723ac8dad6de</string>
+          <string>0a527996-0c1b-4d5b-b372-8944d7f9a712</string>
+          <string>4c9a4c9b-ddbb-493f-bf2d-ec81db363e69</string>
+          <string>fe053ea7-713f-4917-b7a9-8d9238e2ed04</string>
+          <string>562a3e9c-1994-4f9f-b717-e47a373f742e</string>
+          <string>a86896c1-afe0-4de4-a9fa-a3fd46045917</string>
+          <string>7e64000a-13f3-4ee7-b4bc-2b75e2d4a13b</string>
+          <string>e2df2fdf-17d3-4a60-a9e7-2c78e4a7c543</string>
+          <string>d10f9306-bb5c-4ec8-a464-5172deb38098</string>
+          <string>e92d4861-98da-453d-9315-316817b98493</string>
+          <string>2dce18f7-b272-4acf-a637-27f7ad50c6c2</string>
+          <string>1350de49-6c5f-42dd-92e4-1aa7cf5aea0f</string>
+          <string>48ac6ae0-1126-446d-bd5c-c2b97fbb2602</string>
+          <string>ffb8b3e1-5741-46c1-b820-d6be26d75f30</string>
+          <string>1a657bf5-4e8b-47ca-b76a-a95cac5beab9</string>
+          <string>f7a61ec3-b587-4b8c-95af-6267a9c8e58a</string>
+          <string>02a51549-e4e7-4b37-9caf-08b5443ab372</string>
+          <string>4935f6bb-85c2-4faf-983c-8395258761d8</string>
+        </disabledChannelIds>
+        <codeTemplates>
+          <codeTemplate version="3.5.1">
+            <id>f7ebef50-b780-4f4b-8a24-82cc8c86c29f</id>
+            <name>LastVisitLog</name>
+            <revision>1</revision>
+            <lastModified>
+              <time>1537349256945</time>
+              <timezone>Africa/Nairobi</timezone>
+            </lastModified>
+            <contextSet>
+              <delegate>
+                <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
+                <contextType>DESTINATION_DISPATCHER</contextType>
+                <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
+                <contextType>SOURCE_RECEIVER</contextType>
+                <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
+              </delegate>
+            </contextSet>
+            <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
+              <type>FUNCTION</type>
+              <code>function LastVisitLog() 
+{
+
+	var date_today = DateUtil.getCurrentDate(&apos;yyyy-MM-dd&apos;);
+	
+	var max_sql = &quot;SELECT MAX(visit_date) AS max FROM Anc.visits where visit_date&lt;=&apos;&quot;+ date_today +&quot;&apos;&quot;;
+	var max = &quot;&quot;;
+	try {
+		//dbConn = DatabaseConnectionFactory.createDatabaseConnection(&apos;net.sourceforge.jtds.jdbc.Driver&apos;,&apos;jdbc:jtds:sqlserver://KECL-HIS-014293:1433/SETSRegistry&apos;,&apos;sa&apos;,&apos;wafteWAFTE@@&apos;);
+	     var max_result = HISSgetDbConn().executeCachedQuery(max_sql);
+		if(max_result.next()) 
+		{
+			max = max_result.getString(&quot;max&quot;);
+		} 
+	} 
+	
+	catch(err){
+		//logger.error(&apos;(&apos;+$g(&apos;facility_name&apos;) + &apos; : &apos; + $g(&apos;application_name&apos;) + &apos;) The following error occured hapa: &apos; + err);
+	}
+
+finally {
+	if (HISSgetDbConn()) 
+	{ 
+		HISSgetDbConn().close();
+	}
+
+}
+	
+	return max;
+}
+</code>
+            </properties>
+          </codeTemplate>
+          <codeTemplate version="3.5.1">
+            <id>62c899f4-6a26-4356-ab4a-1c1dae166c06</id>
+            <name>SorceDatabaseConn</name>
+            <revision>64</revision>
+            <lastModified>
+              <time>1554961465749</time>
+              <timezone>Africa/Nairobi</timezone>
+            </lastModified>
+            <contextSet>
+              <delegate>
+                <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
+                <contextType>DESTINATION_DISPATCHER</contextType>
+                <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
+                <contextType>SOURCE_RECEIVER</contextType>
+                <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
+              </delegate>
+            </contextSet>
+            <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
+              <type>FUNCTION</type>
+              <code>function HISSgetDbConn() {
+	var dbConn = globalMap.get(&quot;HISSgetDbConn&quot;);
+	
+	if (dbConn == null || dbConn.getConnection().isClosed())
+	{
+		
+		dbConn = DatabaseConnectionFactory.createDatabaseConnection(&apos;net.sourceforge.jtds.jdbc.Driver&apos;,&apos;jdbc:jtds:sqlserver://localhost:1433/AlphaDSSLinkage_New_Redesigned;instance=MSSQLSERVER&apos;,&apos;sa&apos;,&apos;mane2014&apos;);
+
+		//dbConn = DatabaseConnectionFactory.createDatabaseConnection(&apos;net.sourceforge.jtds.jdbc.Driver&apos;,&apos;jdbc:jtds:sqlserver://localhost:1433/Alpha_Akala;instance=MSSQLSERVER&apos;,&apos;sa&apos;,&apos;wafteWAFTE@@&apos;);
+       
+       	globalMap.put(&quot;HISSgetDbConn&quot;, dbConn);
+	}
+
+	return dbConn;
+}</code>
+            </properties>
+          </codeTemplate>
+        </codeTemplates>
+      </codeTemplateLibrary>
+    </codeTemplateLibraries>
+  </exportData>
+</channel>
