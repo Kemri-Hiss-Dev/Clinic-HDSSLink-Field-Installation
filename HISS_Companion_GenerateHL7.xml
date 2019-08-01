@@ -3,7 +3,7 @@
   <nextMetaDataId>6</nextMetaDataId>
   <name>HISS_Companion_GenerateHL7</name>
   <description></description>
-  <revision>47</revision>
+  <revision>66</revision>
   <sourceConnector version="3.5.1">
     <metaDataId>0</metaDataId>
     <name>sourceConnector</name>
@@ -72,6 +72,9 @@ try {
 
 var Query = &quot;SELECT v.anc_visit_id,v.system_id,visit_date,created_at,v.created_by,modified_at from Anc.visits v &quot;;
 	  Query += &quot; JOIN registry.person p on v.system_id=p.system_id where v.sent_flag=0 and p.facility_mflcode=&quot;+ current_facility +&quot;&quot;;
+
+//var Query = &quot;SELECT v.anc_visit_id,v.system_id,visit_date,created_at,v.created_by,modified_at from Anc.visits v &quot;;
+	  //Query += &quot; JOIN registry.person p on v.system_id=p.system_id where v.sent_flag=0 and p.facility_mflcode=&quot;+ current_facility +&quot;&quot;;
 
 var result = HISSgetDbConn().executeCachedQuery(Query);	
 
@@ -718,7 +721,7 @@ try
 
 var  Query = &quot;SELECT distinct system_id,&quot;;
 	Query += &quot;test_type,test_result,test_point,test_date &quot;;
-	Query += &quot;from [registry].[test_result] where is_duplicate=0 and system_id= &apos;&quot;+ msg[&apos;system_id&apos;].toString() +&quot;&apos;;&quot;;
+	Query += &quot;from [registry].[test_result] where is_duplicate=0 and is_voided=0 and system_id= &apos;&quot;+ msg[&apos;system_id&apos;].toString() +&quot;&apos;;&quot;;
 		
 	
 	
@@ -1582,7 +1585,7 @@ try
 	Query += &quot;[counselled_as_couple],[partner_test_result],[ANC_ccc_number],[ANC_village],&quot;;
 	Query += &quot;[first_hiv_test] as first_ANC_hiv_test,[second_hiv_test] as second_ANC_hiv_test,&quot;;
 	Query += &quot;[anc_birth_day],[anc_birth_month],[anc_birth_year],&quot;;
-	Query += &quot;[first_negative_test_date],[sample_actually_drawn],[created_at]&quot;;
+	Query += &quot;[first_negative_test_date],[sample_actually_drawn],[is_anc_complete] as anc_visit_count,[is_ccc_complete] as height_and_exercise,[created_at]&quot;;
 	Query += &quot;from [Anc].[person_metadata] where system_id=&apos;&quot;+$(&apos;system_id&apos;)+&quot;&apos; and anc_visit_id= &apos;&quot;+ msg[&apos;anc_visit_id&apos;].toString() +&quot;&apos;;&quot;;
 		
 	
@@ -1605,6 +1608,24 @@ var result = HISSgetDbConn().executeCachedQuery(Query);
 		meta_obj.anc_birth_day=result.getString(&quot;anc_birth_day&quot;);
 		meta_obj.anc_birth_month=result.getString(&quot;anc_birth_month&quot;);
 		meta_obj.anc_birth_year=result.getString(&quot;anc_birth_year&quot;);
+		//handle the height and ANC exercise here
+		var height_and_exercise = result.getString(&quot;height_and_exercise&quot;);
+		 if(height_and_exercise != &apos;&apos; &amp;&amp; height_and_exercise != null)
+		 {
+              var parts = height_and_exercise.split(&apos;-&apos;, 2);
+               meta_obj.anc_exercise_given=parts[0];
+               meta_obj.anc_height=parts[1];
+		 }
+          //handle the visit count
+          var anc_visit_count=result.getString(&quot;anc_visit_count&quot;);
+
+          if(anc_visit_count != null &amp;&amp; anc_visit_count != &apos;&apos;)
+          {
+            var parts2=anc_visit_count.split(&apos;-&apos;, 2);
+            meta_obj.anc_isfirst_visit=parts2[0];
+            meta_obj.anc_visit_no=parts2[1];
+          }
+		
      	
 	}
 	
@@ -1663,7 +1684,7 @@ $c(&apos;HDSSLogArray&apos;,[]);
 
 
 var  Query = &quot;SELECT distinct search_parameters,created_at,involved_user &quot;;
-Query += &quot;from registry.hdss_search_log where system_id IS NOT NULL and system_id !=&apos;&apos; and system_id= &apos;&quot;+ msg[&apos;system_id&apos;].toString() +&quot;&apos;;&quot;;
+Query += &quot;from registry.hdss_search_log where search_parameters IS NOT NULL AND search_parameters != &apos;&apos; AND system_id IS NOT NULL and system_id !=&apos;&apos; and system_id= &apos;&quot;+ msg[&apos;system_id&apos;].toString() +&quot;&apos;;&quot;;
 
 
 var result = HISSgetDbConn().executeCachedQuery(Query);	
@@ -1714,7 +1735,7 @@ $c(&apos;PatientRemarks&apos;,[]);
 
 
 var  Query = &quot;SELECT distinct remarks,created_at &quot;;
-Query += &quot;from registry.person_remarks where system_id IS NOT NULL and system_id !=&apos;&apos; and system_id= &apos;&quot;+ msg[&apos;system_id&apos;].toString() +&quot;&apos;;&quot;;
+Query += &quot;from registry.person_remarks where remarks IS NOT NULL AND remarks != &apos;&apos; AND system_id IS NOT NULL and system_id !=&apos;&apos; and system_id= &apos;&quot;+ msg[&apos;system_id&apos;].toString() +&quot;&apos;;&quot;;
 
 
 var result = HISSgetDbConn().executeCachedQuery(Query);	
@@ -3067,166 +3088,12 @@ return;</undeployScript>
     <metadata>
       <enabled>true</enabled>
       <lastModified>
-        <time>1554961036230</time>
+        <time>1564546438920</time>
         <timezone>Africa/Nairobi</timezone>
       </lastModified>
       <pruningSettings>
-        <pruneMetaDataDays>1</pruneMetaDataDays>
         <archiveEnabled>true</archiveEnabled>
       </pruningSettings>
     </metadata>
-    <codeTemplateLibraries>
-      <codeTemplateLibrary version="3.5.1">
-        <id>22a46415-6926-4c0f-9bdb-cea5b3a419cf</id>
-        <name>HISSCompanionHelperFunctions</name>
-        <revision>6</revision>
-        <lastModified>
-          <time>1552458957382</time>
-          <timezone>Africa/Nairobi</timezone>
-        </lastModified>
-        <description></description>
-        <includeNewChannels>false</includeNewChannels>
-        <enabledChannelIds>
-          <string>d31458af-2e81-4569-9bd2-33c9336960c7</string>
-          <string>277dabab-f772-4b1b-9c4a-abc55423646c</string>
-        </enabledChannelIds>
-        <disabledChannelIds>
-          <string>dd2e16ac-c55c-481e-8b29-baabea1f5037</string>
-          <string>2f280c72-e265-4e1e-9d51-228f004b5dca</string>
-          <string>fa4add78-c307-4bc3-985c-1fe219f28666</string>
-          <string>53b6c7c9-f95e-4af1-9f39-e6b24af31249</string>
-          <string>5556a4ce-fbc4-4bfd-a3c7-573c6db4b2d7</string>
-          <string>d60c401e-b95f-4bc3-899b-cb998409cd5b</string>
-          <string>da1d7a1e-69db-49b5-a5fe-90d762c2b264</string>
-          <string>cb856e60-c193-4b15-b42b-3056e08b28d6</string>
-          <string>6d8427b6-8f5d-4f9c-b08c-fb045cde3cc0</string>
-          <string>1a4082d4-5612-4a16-92c5-c404c4083d3f</string>
-          <string>cf7bfba4-0a45-46cd-94ea-099925df4a16</string>
-          <string>05169097-ac5e-405a-817c-ca5ce1af6b4f</string>
-          <string>e1b15f1c-5e46-436c-b3d0-24022ed7fa3a</string>
-          <string>582e298d-34f9-4c92-87e2-dc34d2415961</string>
-          <string>2f7656b6-0fc5-4b36-8706-88388c838b26</string>
-          <string>94c0ac89-95c6-4fd4-a626-772931d21070</string>
-          <string>dd835d09-a8b0-4e9c-ba5c-0bf71568b6a3</string>
-          <string>15bd225c-114d-4c0c-ae35-990783e51600</string>
-          <string>6a40a092-3ee2-4884-8efa-c7ec40fbcdfb</string>
-          <string>e27386f6-6c1f-4994-90a0-1e2cea6dd5d9</string>
-          <string>6a0cfdbf-7202-468b-924d-4272be0bbb8b</string>
-          <string>c66e6120-550c-4afb-8290-d8e3c06b8170</string>
-          <string>4add4e63-3dc2-4216-ae5a-0df42606b22f</string>
-          <string>40d2e79f-b700-4d7f-8bbf-93d9682da101</string>
-          <string>7529b807-c25c-4e81-bc5c-06c91b6e512e</string>
-          <string>1c8fe16c-8c67-4e7a-83c7-982127aa8ebd</string>
-          <string>1e3b74a2-2414-41b6-9e9c-723ac8dad6de</string>
-          <string>0a527996-0c1b-4d5b-b372-8944d7f9a712</string>
-          <string>4c9a4c9b-ddbb-493f-bf2d-ec81db363e69</string>
-          <string>fe053ea7-713f-4917-b7a9-8d9238e2ed04</string>
-          <string>562a3e9c-1994-4f9f-b717-e47a373f742e</string>
-          <string>a86896c1-afe0-4de4-a9fa-a3fd46045917</string>
-          <string>7e64000a-13f3-4ee7-b4bc-2b75e2d4a13b</string>
-          <string>e2df2fdf-17d3-4a60-a9e7-2c78e4a7c543</string>
-          <string>d10f9306-bb5c-4ec8-a464-5172deb38098</string>
-          <string>e92d4861-98da-453d-9315-316817b98493</string>
-          <string>2dce18f7-b272-4acf-a637-27f7ad50c6c2</string>
-          <string>1350de49-6c5f-42dd-92e4-1aa7cf5aea0f</string>
-          <string>48ac6ae0-1126-446d-bd5c-c2b97fbb2602</string>
-          <string>ffb8b3e1-5741-46c1-b820-d6be26d75f30</string>
-          <string>1a657bf5-4e8b-47ca-b76a-a95cac5beab9</string>
-          <string>f7a61ec3-b587-4b8c-95af-6267a9c8e58a</string>
-          <string>02a51549-e4e7-4b37-9caf-08b5443ab372</string>
-          <string>4935f6bb-85c2-4faf-983c-8395258761d8</string>
-        </disabledChannelIds>
-        <codeTemplates>
-          <codeTemplate version="3.5.1">
-            <id>f7ebef50-b780-4f4b-8a24-82cc8c86c29f</id>
-            <name>LastVisitLog</name>
-            <revision>1</revision>
-            <lastModified>
-              <time>1537349256945</time>
-              <timezone>Africa/Nairobi</timezone>
-            </lastModified>
-            <contextSet>
-              <delegate>
-                <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
-                <contextType>DESTINATION_DISPATCHER</contextType>
-                <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
-                <contextType>SOURCE_RECEIVER</contextType>
-                <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
-              </delegate>
-            </contextSet>
-            <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
-              <type>FUNCTION</type>
-              <code>function LastVisitLog() 
-{
-
-	var date_today = DateUtil.getCurrentDate(&apos;yyyy-MM-dd&apos;);
-	
-	var max_sql = &quot;SELECT MAX(visit_date) AS max FROM Anc.visits where visit_date&lt;=&apos;&quot;+ date_today +&quot;&apos;&quot;;
-	var max = &quot;&quot;;
-	try {
-		//dbConn = DatabaseConnectionFactory.createDatabaseConnection(&apos;net.sourceforge.jtds.jdbc.Driver&apos;,&apos;jdbc:jtds:sqlserver://KECL-HIS-014293:1433/SETSRegistry&apos;,&apos;sa&apos;,&apos;wafteWAFTE@@&apos;);
-	     var max_result = HISSgetDbConn().executeCachedQuery(max_sql);
-		if(max_result.next()) 
-		{
-			max = max_result.getString(&quot;max&quot;);
-		} 
-	} 
-	
-	catch(err){
-		//logger.error(&apos;(&apos;+$g(&apos;facility_name&apos;) + &apos; : &apos; + $g(&apos;application_name&apos;) + &apos;) The following error occured hapa: &apos; + err);
-	}
-
-finally {
-	if (HISSgetDbConn()) 
-	{ 
-		HISSgetDbConn().close();
-	}
-
-}
-	
-	return max;
-}
-</code>
-            </properties>
-          </codeTemplate>
-          <codeTemplate version="3.5.1">
-            <id>62c899f4-6a26-4356-ab4a-1c1dae166c06</id>
-            <name>SorceDatabaseConn</name>
-            <revision>64</revision>
-            <lastModified>
-              <time>1554961465749</time>
-              <timezone>Africa/Nairobi</timezone>
-            </lastModified>
-            <contextSet>
-              <delegate>
-                <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
-                <contextType>DESTINATION_DISPATCHER</contextType>
-                <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
-                <contextType>SOURCE_RECEIVER</contextType>
-                <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
-              </delegate>
-            </contextSet>
-            <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
-              <type>FUNCTION</type>
-              <code>function HISSgetDbConn() {
-	var dbConn = globalMap.get(&quot;HISSgetDbConn&quot;);
-	
-	if (dbConn == null || dbConn.getConnection().isClosed())
-	{
-		
-		dbConn = DatabaseConnectionFactory.createDatabaseConnection(&apos;net.sourceforge.jtds.jdbc.Driver&apos;,&apos;jdbc:jtds:sqlserver://localhost:1433/AlphaDSSLinkage_New_Redesigned;instance=MSSQLSERVER&apos;,&apos;sa&apos;,&apos;mane2014&apos;);
-
-		//dbConn = DatabaseConnectionFactory.createDatabaseConnection(&apos;net.sourceforge.jtds.jdbc.Driver&apos;,&apos;jdbc:jtds:sqlserver://localhost:1433/Alpha_Akala;instance=MSSQLSERVER&apos;,&apos;sa&apos;,&apos;wafteWAFTE@@&apos;);
-       
-       	globalMap.put(&quot;HISSgetDbConn&quot;, dbConn);
-	}
-
-	return dbConn;
-}</code>
-            </properties>
-          </codeTemplate>
-        </codeTemplates>
-      </codeTemplateLibrary>
-    </codeTemplateLibraries>
   </exportData>
 </channel>
